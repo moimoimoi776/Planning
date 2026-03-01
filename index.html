@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mon Calendrier</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Mon Agenda</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0f0f13;
@@ -14,340 +15,159 @@
     --text: #e8e8f0;
     --text-muted: #7a7a90;
     --accent: #c8a96e;
-    --accent2: #6e8fc8;
     --rdv-color: #c86e8f;
-    --rdv-bg: rgba(200, 110, 143, 0.15);
+    --rdv-bg: rgba(200,110,143,0.15);
     --long-color: #6ec8a9;
-    --long-bg: rgba(110, 200, 169, 0.15);
+    --long-bg: rgba(110,200,169,0.15);
     --vacances-color: #c8a96e;
-    --vacances-bg: rgba(200, 169, 110, 0.15);
+    --vacances-bg: rgba(200,169,110,0.15);
     --radius: 12px;
     --sidebar: 220px;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-  }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
 
-  /* ── SIDEBAR ── */
+  /* SIDEBAR */
   #sidebar {
-    width: var(--sidebar);
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    padding: 28px 0;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
+    width:var(--sidebar); background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:28px 0;
+    position:fixed; top:0; left:0; bottom:0; z-index:100;
   }
-  .logo {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.4rem;
-    color: var(--accent);
-    padding: 0 24px 28px;
-    border-bottom: 1px solid var(--border);
-    letter-spacing: 0.01em;
-  }
-  .logo span { color: var(--text-muted); font-size: 0.75rem; display: block; font-family: 'DM Sans', sans-serif; margin-top: 2px; font-weight: 300; }
-  nav { padding: 20px 12px; flex: 1; }
+  .logo { font-family:'DM Serif Display',serif; font-size:1.4rem; color:var(--accent); padding:0 24px 28px; border-bottom:1px solid var(--border); }
+  .logo span { color:var(--text-muted); font-size:0.75rem; display:block; font-family:'DM Sans',sans-serif; margin-top:2px; font-weight:300; }
+  nav { padding:20px 12px; flex:1; }
   nav button {
-    width: 100%; text-align: left;
-    background: none; border: none;
-    color: var(--text-muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 500;
-    padding: 10px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex; align-items: center; gap: 10px;
-    transition: all 0.15s;
-    margin-bottom: 4px;
+    width:100%; text-align:left; background:none; border:none; color:var(--text-muted);
+    font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:500;
+    padding:10px 14px; border-radius:8px; cursor:pointer;
+    display:flex; align-items:center; gap:10px; transition:all 0.15s; margin-bottom:4px;
   }
-  nav button:hover { background: var(--surface2); color: var(--text); }
-  nav button.active { background: var(--surface2); color: var(--accent); }
-  nav button .icon { font-size: 1.1rem; width: 20px; text-align: center; }
+  nav button:hover { background:var(--surface2); color:var(--text); }
+  nav button.active { background:var(--surface2); color:var(--accent); }
+  nav button .icon { font-size:1.1rem; width:20px; text-align:center; }
+  .legend { padding:16px 20px; border-top:1px solid var(--border); }
+  .legend-title { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px; }
+  .legend-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-muted); margin-bottom:6px; }
+  .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .legend-dot.rdv { background:var(--rdv-color); }
+  .legend-dot.long { background:var(--long-color); }
+  .legend-dot.vacances { background:var(--vacances-color); }
 
-  .legend {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-  }
-  .legend-title { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .legend-dot.rdv { background: var(--rdv-color); }
-  .legend-dot.long { background: var(--long-color); }
-  .legend-dot.vacances { background: var(--vacances-color); }
+  /* MAIN */
+  #main { margin-left:var(--sidebar); flex:1; padding:32px; min-height:100vh; }
+  .view { display:none; }
+  .view.active { display:block; }
 
-  /* ── MAIN ── */
-  #main {
-    margin-left: var(--sidebar);
-    flex: 1;
-    padding: 32px;
-    min-height: 100vh;
-  }
-  .view { display: none; }
-  .view.active { display: block; }
-
-  /* ── CALENDRIER VIEW ── */
-  .cal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 28px;
-  }
-  .cal-header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2rem;
-    color: var(--text);
-  }
-  .nav-btns { display: flex; gap: 8px; }
+  /* CALENDRIER */
+  .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+  .cal-header h1 { font-family:'DM Serif Display',serif; font-size:2rem; }
+  .nav-btns { display:flex; gap:8px; }
   .nav-btns button {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.15s;
+    background:var(--surface); border:1px solid var(--border); color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:0.85rem; padding:8px 16px;
+    border-radius:8px; cursor:pointer; transition:all 0.15s;
   }
-  .nav-btns button:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+  .nav-btns button:hover { background:var(--surface2); border-color:var(--accent); color:var(--accent); }
+  .months-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .month-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .month-title { font-family:'DM Serif Display',serif; font-size:1rem; color:var(--accent); margin-bottom:12px; text-transform:capitalize; }
+  .month-title span { color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.8rem; font-weight:300; margin-left:4px; }
+  .weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:6px; }
+  .weekdays span { text-align:center; font-size:0.65rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; padding:4px 0; }
+  .days-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; }
+  .day { min-height:32px; padding:2px; border-radius:6px; display:flex; flex-direction:column; align-items:center; }
+  .day.other-month .day-num { color:var(--border); }
+  .day-num { font-size:0.75rem; color:var(--text-muted); line-height:1.8; font-weight:400; min-width:20px; text-align:center; border-radius:50%; }
+  .day.today .day-num { background:var(--accent); color:var(--bg); font-weight:600; }
+  .day-events { width:100%; display:flex; flex-direction:column; gap:1px; }
+  .day-event { font-size:0.6rem; padding:1px 3px; border-radius:3px; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .day-event.rdv { background:var(--rdv-bg); color:var(--rdv-color); border-left:2px solid var(--rdv-color); }
+  .day-event.long { background:var(--long-bg); color:var(--long-color); border-left:2px solid var(--long-color); }
+  .day-event.vacances { background:var(--vacances-bg); color:var(--vacances-color); border-left:2px solid var(--vacances-color); }
 
-  .months-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-  .month-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-  }
-  .month-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1rem;
-    color: var(--accent);
-    margin-bottom: 12px;
-    text-transform: capitalize;
-  }
-  .month-title span { color: var(--text-muted); font-family: 'DM Sans',sans-serif; font-size: 0.8rem; font-weight: 300; margin-left: 4px; }
-  .weekdays {
-    display: grid; grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 6px;
-  }
-  .weekdays span {
-    text-align: center; font-size: 0.65rem; font-weight: 600;
-    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
-    padding: 4px 0;
-  }
-  .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
-  .day {
-    min-height: 32px; padding: 2px;
-    border-radius: 6px; cursor: default;
-    position: relative;
-    display: flex; flex-direction: column; align-items: center;
-  }
-  .day.other-month .day-num { color: var(--border); }
-  .day-num {
-    font-size: 0.75rem; color: var(--text-muted);
-    line-height: 1.8; font-weight: 400;
-    min-width: 20px; text-align: center;
-    border-radius: 50%;
-  }
-  .day.today .day-num {
-    background: var(--accent);
-    color: var(--bg);
-    font-weight: 600;
-  }
-  .day-events { width: 100%; display: flex; flex-direction: column; gap: 1px; }
-  .day-event {
-    font-size: 0.6rem; padding: 1px 3px;
-    border-radius: 3px; line-height: 1.4;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 100%;
-  }
-  .day-event.rdv { background: var(--rdv-bg); color: var(--rdv-color); border-left: 2px solid var(--rdv-color); }
-  .day-event.long { background: var(--long-bg); color: var(--long-color); border-left: 2px solid var(--long-color); }
-  .day-event.vacances { background: var(--vacances-bg); color: var(--vacances-color); border-left: 2px solid var(--vacances-color); }
-
-  /* ── FORM VIEW ── */
-  .form-header {
-    margin-bottom: 32px;
-  }
-  .form-header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2rem;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-  .form-header p { color: var(--text-muted); font-size: 0.9rem; }
-
-  .form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 32px;
-    max-width: 600px;
-  }
-  .form-row { margin-bottom: 20px; }
-  label {
-    display: block;
-    font-size: 0.78rem; font-weight: 600;
-    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em;
-    margin-bottom: 7px;
-  }
+  /* FORMULAIRE */
+  .form-header { margin-bottom:32px; }
+  .form-header h1 { font-family:'DM Serif Display',serif; font-size:2rem; margin-bottom:6px; }
+  .form-header p { color:var(--text-muted); font-size:0.9rem; }
+  .form-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; max-width:600px; }
+  .form-row { margin-bottom:20px; }
+  label { display:block; font-size:0.78rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:7px; }
   input[type=text], input[type=date], textarea, select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    padding: 10px 14px;
-    outline: none;
-    transition: border-color 0.15s;
+    width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem; padding:10px 14px;
+    outline:none; transition:border-color 0.15s;
   }
-  input[type=text]:focus, input[type=date]:focus, textarea:focus, select:focus {
-    border-color: var(--accent);
-  }
-  textarea { resize: vertical; min-height: 90px; }
-  select option { background: var(--surface); }
-
-  .cat-selector { display: flex; gap: 10px; }
+  input[type=text]:focus, input[type=date]:focus, textarea:focus { border-color:var(--accent); }
+  textarea { resize:vertical; min-height:90px; }
+  .cat-selector { display:flex; gap:10px; }
   .cat-btn {
-    flex: 1; padding: 10px;
-    background: var(--bg); border-radius: 8px;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-family: 'DM Sans',sans-serif; font-size: 0.85rem; font-weight: 500;
-    cursor: pointer; text-align: center;
-    transition: all 0.15s;
+    flex:1; padding:10px; background:var(--bg); border-radius:8px;
+    border:1px solid var(--border); color:var(--text-muted);
+    font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500;
+    cursor:pointer; text-align:center; transition:all 0.15s;
   }
-  .cat-btn:hover { border-color: var(--text-muted); color: var(--text); }
-  .cat-btn.selected-rdv { border-color: var(--rdv-color); color: var(--rdv-color); background: var(--rdv-bg); }
-  .cat-btn.selected-long { border-color: var(--long-color); color: var(--long-color); background: var(--long-bg); }
-  .cat-btn.selected-vacances { border-color: var(--vacances-color); color: var(--vacances-color); background: var(--vacances-bg); }
+  .cat-btn:hover { border-color:var(--text-muted); color:var(--text); }
+  .cat-btn.selected-rdv { border-color:var(--rdv-color); color:var(--rdv-color); background:var(--rdv-bg); }
+  .cat-btn.selected-long { border-color:var(--long-color); color:var(--long-color); background:var(--long-bg); }
+  .cat-btn.selected-vacances { border-color:var(--vacances-color); color:var(--vacances-color); background:var(--vacances-bg); }
+  .date-end-block { display:none; }
+  .date-end-block.visible { display:block; }
+  .btn-primary { background:var(--accent); color:var(--bg); border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:600; padding:12px 28px; cursor:pointer; transition:opacity 0.15s; }
+  .btn-primary:hover { opacity:0.85; }
+  .btn-secondary { background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.9rem; padding:12px 20px; cursor:pointer; transition:all 0.15s; margin-right:10px; }
+  .btn-secondary:hover { color:var(--text); }
 
-  .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .date-end-block { display: none; }
-  .date-end-block.visible { display: block; }
+  /* LISTE */
+  .list-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+  .list-header h1 { font-family:'DM Serif Display',serif; font-size:2rem; }
+  .events-list { display:flex; flex-direction:column; gap:10px; max-width:700px; }
+  .event-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; display:flex; align-items:flex-start; gap:14px; transition:border-color 0.15s; }
+  .event-item:hover { border-color:var(--text-muted); }
+  .event-bar { width:3px; border-radius:3px; align-self:stretch; flex-shrink:0; }
+  .event-bar.rdv { background:var(--rdv-color); }
+  .event-bar.long { background:var(--long-color); }
+  .event-bar.vacances { background:var(--vacances-color); }
+  .event-info { flex:1; }
+  .event-title-row { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .event-title { font-weight:600; font-size:0.95rem; }
+  .event-cat { font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; padding:2px 7px; border-radius:10px; }
+  .event-cat.rdv { background:var(--rdv-bg); color:var(--rdv-color); }
+  .event-cat.long { background:var(--long-bg); color:var(--long-color); }
+  .event-cat.vacances { background:var(--vacances-bg); color:var(--vacances-color); }
+  .event-date { font-size:0.8rem; color:var(--text-muted); margin-bottom:4px; }
+  .event-content { font-size:0.83rem; color:var(--text-muted); line-height:1.5; }
+  .event-actions { display:flex; gap:6px; flex-shrink:0; }
+  .event-delete { background:none; border:none; color:var(--border); font-size:1rem; cursor:pointer; padding:2px; transition:color 0.15s; }
+  .event-delete:hover { color:#c86e6e; }
+  .event-edit { background:none; border:none; color:var(--border); font-size:1rem; cursor:pointer; padding:2px; transition:color 0.15s; }
+  .event-edit:hover { color:var(--accent); }
 
-  .btn-primary {
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    border-radius: 8px;
-    font-family: 'DM Sans',sans-serif;
-    font-size: 0.9rem; font-weight: 600;
-    padding: 12px 28px;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .btn-primary:hover { opacity: 0.85; }
-  .btn-secondary {
-    background: var(--surface2);
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: 'DM Sans',sans-serif;
-    font-size: 0.9rem;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-right: 10px;
-  }
-  .btn-secondary:hover { color: var(--text); }
+  .empty-state { text-align:center; padding:48px 0; color:var(--text-muted); }
+  .empty-state .big { font-size:2.5rem; margin-bottom:12px; }
 
-  /* ── LIST VIEW ── */
-  .list-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 24px;
-  }
-  .list-header h1 { font-family: 'DM Serif Display',serif; font-size: 2rem; }
-  .events-list { display: flex; flex-direction: column; gap: 10px; max-width: 700px; }
-  .event-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    display: flex; align-items: flex-start; gap: 14px;
-    transition: border-color 0.15s;
-  }
-  .event-item:hover { border-color: var(--text-muted); }
-  .event-bar { width: 3px; border-radius: 3px; align-self: stretch; flex-shrink: 0; }
-  .event-bar.rdv { background: var(--rdv-color); }
-  .event-bar.long { background: var(--long-color); }
-  .event-bar.vacances { background: var(--vacances-color); }
-  .event-info { flex: 1; }
-  .event-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-  .event-title { font-weight: 600; font-size: 0.95rem; }
-  .event-cat {
-    font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
-    padding: 2px 7px; border-radius: 10px;
-  }
-  .event-cat.rdv { background: var(--rdv-bg); color: var(--rdv-color); }
-  .event-cat.long { background: var(--long-bg); color: var(--long-color); }
-  .event-cat.vacances { background: var(--vacances-bg); color: var(--vacances-color); }
-  .event-date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
-  .event-content { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; }
-  .event-delete {
-    background: none; border: none; color: var(--border);
-    font-size: 1rem; cursor: pointer; padding: 2px;
-    transition: color 0.15s;
-    flex-shrink: 0;
-  }
-  .event-delete:hover { color: #c86e6e; }
+  /* LOADING */
+  .loading { display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:0.9rem; padding:20px 0; }
+  .spinner { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
 
-  .empty-state {
-    text-align: center; padding: 48px 0;
-    color: var(--text-muted);
-  }
-  .empty-state .big { font-size: 2.5rem; margin-bottom: 12px; }
-  .empty-state p { font-size: 0.9rem; }
+  /* TOAST */
+  #toast { position:fixed; bottom:24px; right:24px; background:var(--surface2); border:1px solid var(--accent); color:var(--accent); padding:12px 20px; border-radius:8px; font-size:0.85rem; font-weight:500; transform:translateY(80px); opacity:0; transition:all 0.3s; z-index:9999; }
+  #toast.show { transform:translateY(0); opacity:1; }
+  #toast.error { border-color:#c86e6e; color:#c86e6e; }
 
-  /* ── TOAST ── */
-  #toast {
-    position: fixed; bottom: 24px; right: 24px;
-    background: var(--surface2);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 0.85rem; font-weight: 500;
-    transform: translateY(80px); opacity: 0;
-    transition: all 0.3s;
-    z-index: 9999;
-  }
-  #toast.show { transform: translateY(0); opacity: 1; }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:5px; }
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <aside id="sidebar">
   <div class="logo">Agenda<span>Personnel</span></div>
   <nav>
-    <button class="active" onclick="showView('cal')" id="nav-cal">
-      <span class="icon">◼</span> Calendrier
-    </button>
-    <button onclick="showView('add')" id="nav-add">
-      <span class="icon">＋</span> Nouveau
-    </button>
-    <button onclick="showView('list')" id="nav-list">
-      <span class="icon">≡</span> Liste
-    </button>
+    <button class="active" onclick="showView('cal')" id="nav-cal"><span class="icon">◼</span> Calendrier</button>
+    <button onclick="showView('add')" id="nav-add"><span class="icon">＋</span> Nouveau</button>
+    <button onclick="showView('list')" id="nav-list"><span class="icon">≡</span> Liste</button>
   </nav>
   <div class="legend">
     <div class="legend-title">Catégories</div>
@@ -357,10 +177,8 @@
   </div>
 </aside>
 
-<!-- MAIN -->
 <main id="main">
 
-  <!-- VUE CALENDRIER -->
   <div class="view active" id="view-cal">
     <div class="cal-header">
       <h1 id="cal-title">Calendrier</h1>
@@ -375,10 +193,9 @@
     <div class="months-grid" id="months-grid"></div>
   </div>
 
-  <!-- VUE FORMULAIRE -->
   <div class="view" id="view-add">
     <div class="form-header">
-      <h1>Nouveau rendez-vous</h1>
+      <h1 id="form-title">Nouveau rendez-vous</h1>
       <p>Ajoutez un événement à votre calendrier</p>
     </div>
     <div class="form-card">
@@ -413,7 +230,6 @@
     </div>
   </div>
 
-  <!-- VUE LISTE -->
   <div class="view" id="view-list">
     <div class="list-header">
       <h1>Tous les événements</h1>
@@ -426,15 +242,51 @@
 <div id="toast"></div>
 
 <script>
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL = 'https://cmfpolllfchtytrowspilt.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtZnBvbGxsZmNodHl0cndzc3BpbHQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc3MjM5MDI5NywiZXhwIjoyMDg3OTY2Mjk3fQ.WvW_-R5LWhfRQFkrl4InN3g_vX3EklWF1Mh1io83T4A';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
 // ── STATE ──
 let startOffset = 0;
 let selectedCat = null;
 let editingId = null;
-let events = JSON.parse(localStorage.getItem('agenda_events') || '[]');
+let events = [];
 
-const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin',
-                   'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const DAYS_FR = ['L','M','M','J','V','S','D'];
+
+// ── INIT ──
+async function init() {
+  await loadEvents();
+  renderCalendar();
+}
+
+// ── SUPABASE CRUD ──
+async function loadEvents() {
+  const { data, error } = await db.from('events').select('*').order('date_start', { ascending: true });
+  if (error) { showToast('Erreur chargement : ' + error.message, true); return; }
+  events = data || [];
+}
+
+async function insertEvent(ev) {
+  const { data, error } = await db.from('events').insert([ev]).select().single();
+  if (error) { showToast('Erreur sauvegarde : ' + error.message, true); return null; }
+  return data;
+}
+
+async function updateEvent(id, ev) {
+  const { error } = await db.from('events').update(ev).eq('id', id);
+  if (error) { showToast('Erreur modification : ' + error.message, true); return false; }
+  return true;
+}
+
+async function removeEvent(id) {
+  const { error } = await db.from('events').delete().eq('id', id);
+  if (error) { showToast('Erreur suppression : ' + error.message, true); return false; }
+  return true;
+}
 
 // ── NAVIGATION ──
 function showView(v) {
@@ -444,78 +296,55 @@ function showView(v) {
   document.getElementById('nav-' + v).classList.add('active');
   if (v === 'cal') renderCalendar();
   if (v === 'list') renderList();
-  if (v === 'add') { resetForm(); editingId = null; }
+  if (v === 'add') { resetForm(); }
 }
+
 function offsetMonths(n) { startOffset += n; renderCalendar(); }
 function goToday() { startOffset = 0; renderCalendar(); }
 
 // ── CALENDRIER ──
 function renderCalendar() {
   const today = new Date();
-  const baseYear = today.getFullYear();
-  const baseMonth = today.getMonth();
   const grid = document.getElementById('months-grid');
   grid.innerHTML = '';
-
-  const start = new Date(baseYear, baseMonth + startOffset, 1);
+  const start = new Date(today.getFullYear(), today.getMonth() + startOffset, 1);
+  const end = new Date(today.getFullYear(), today.getMonth() + startOffset + 5, 1);
   document.getElementById('cal-title').textContent =
     MONTHS_FR[start.getMonth()] + ' ' + start.getFullYear() +
-    ' — ' + (() => {
-      const e = new Date(baseYear, baseMonth + startOffset + 5, 1);
-      return MONTHS_FR[e.getMonth()] + ' ' + e.getFullYear();
-    })();
-
+    ' — ' + MONTHS_FR[end.getMonth()] + ' ' + end.getFullYear();
   for (let i = 0; i < 6; i++) {
-    const d = new Date(baseYear, baseMonth + startOffset + i, 1);
+    const d = new Date(today.getFullYear(), today.getMonth() + startOffset + i, 1);
     grid.appendChild(renderMonth(d, today));
   }
 }
 
 function renderMonth(date, today) {
-  const year = date.getFullYear();
-  const month = date.getMonth();
+  const year = date.getFullYear(), month = date.getMonth();
   const card = document.createElement('div');
   card.className = 'month-card';
-
   const title = document.createElement('div');
   title.className = 'month-title';
   title.innerHTML = MONTHS_FR[month] + '<span>' + year + '</span>';
   card.appendChild(title);
-
   const wd = document.createElement('div');
   wd.className = 'weekdays';
   DAYS_FR.forEach(d => { const s = document.createElement('span'); s.textContent = d; wd.appendChild(s); });
   card.appendChild(wd);
-
   const grid = document.createElement('div');
   grid.className = 'days-grid';
-
-  const first = new Date(year, month, 1);
-  let startDay = first.getDay(); // 0=dim
-  startDay = (startDay === 0) ? 6 : startDay - 1; // lundi = 0
-
+  let startDay = new Date(year, month, 1).getDay();
+  startDay = startDay === 0 ? 6 : startDay - 1;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const prevDays = new Date(year, month, 0).getDate();
-
-  // Prev month padding
-  for (let i = startDay - 1; i >= 0; i--) {
-    const el = makeDay(prevDays - i, true, null, false);
-    grid.appendChild(el);
-  }
-  // Current month
+  for (let i = startDay - 1; i >= 0; i--) grid.appendChild(makeDay(prevDays - i, true, null, false));
   for (let d = 1; d <= daysInMonth; d++) {
-    const isToday = (year === today.getFullYear() && month === today.getMonth() && d === today.getDate());
+    const isToday = year === today.getFullYear() && month === today.getMonth() && d === today.getDate();
     const dateStr = toDateStr(year, month, d);
-    const dayEvents = getEventsForDate(dateStr);
-    grid.appendChild(makeDay(d, false, dayEvents, isToday));
+    grid.appendChild(makeDay(d, false, getEventsForDate(dateStr), isToday));
   }
-  // Next month padding
   const total = startDay + daysInMonth;
   const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
-  for (let d = 1; d <= remaining; d++) {
-    grid.appendChild(makeDay(d, true, null, false));
-  }
-
+  for (let d = 1; d <= remaining; d++) grid.appendChild(makeDay(d, true, null, false));
   card.appendChild(grid);
   return card;
 }
@@ -550,71 +379,66 @@ function makeDay(num, otherMonth, dayEvents, isToday) {
 }
 
 function toDateStr(y, m, d) {
-  return y + '-' + String(m + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
 }
 
 function getEventsForDate(dateStr) {
   return events.filter(ev => {
-    if (ev.cat === 'rdv') return ev.dateStart === dateStr;
-    // long & vacances: range
-    return dateStr >= ev.dateStart && dateStr <= (ev.dateEnd || ev.dateStart);
+    if (ev.cat === 'rdv') return ev.date_start === dateStr;
+    return dateStr >= ev.date_start && dateStr <= (ev.date_end || ev.date_start);
   });
 }
 
 // ── FORMULAIRE ──
 function selectCat(cat) {
   selectedCat = cat;
-  ['rdv','long','vacances'].forEach(c => {
-    document.getElementById('cat-' + c).className = 'cat-btn';
-  });
-  document.getElementById('cat-' + cat).className = 'cat-btn selected-' + cat;
-  const endBlock = document.getElementById('date-end-block');
-  if (cat === 'rdv') endBlock.classList.remove('visible');
-  else endBlock.classList.add('visible');
+  ['rdv','long','vacances'].forEach(c => document.getElementById('cat-'+c).className = 'cat-btn');
+  document.getElementById('cat-'+cat).className = 'cat-btn selected-'+cat;
+  document.getElementById('date-end-block').classList.toggle('visible', cat !== 'rdv');
 }
 
 function resetForm() {
-  selectedCat = null;
-  editingId = null;
+  selectedCat = null; editingId = null;
   document.getElementById('f-title').value = '';
   document.getElementById('f-date-start').value = '';
   document.getElementById('f-date-end').value = '';
   document.getElementById('f-content').value = '';
-  ['rdv','long','vacances'].forEach(c => {
-    document.getElementById('cat-' + c).className = 'cat-btn';
-  });
+  ['rdv','long','vacances'].forEach(c => document.getElementById('cat-'+c).className = 'cat-btn');
   document.getElementById('date-end-block').classList.remove('visible');
-  document.querySelector('.form-header h1').textContent = 'Nouveau rendez-vous';
+  document.getElementById('form-title').textContent = 'Nouveau rendez-vous';
 }
 
-function saveEvent() {
+async function saveEvent() {
   const title = document.getElementById('f-title').value.trim();
   const dateStart = document.getElementById('f-date-start').value;
   const dateEnd = document.getElementById('f-date-end').value;
   const content = document.getElementById('f-content').value.trim();
 
-  if (!title) { showToast('Veuillez saisir un titre.'); return; }
-  if (!selectedCat) { showToast('Choisissez une catégorie.'); return; }
-  if (!dateStart) { showToast('Choisissez une date de début.'); return; }
-  if (selectedCat !== 'rdv' && !dateEnd) { showToast('Choisissez une date de fin.'); return; }
-  if (selectedCat !== 'rdv' && dateEnd < dateStart) { showToast('La date de fin doit être après le début.'); return; }
+  if (!title) { showToast('Veuillez saisir un titre.', true); return; }
+  if (!selectedCat) { showToast('Choisissez une catégorie.', true); return; }
+  if (!dateStart) { showToast('Choisissez une date de début.', true); return; }
+  if (selectedCat !== 'rdv' && !dateEnd) { showToast('Choisissez une date de fin.', true); return; }
+  if (selectedCat !== 'rdv' && dateEnd < dateStart) { showToast('La date de fin doit être après le début.', true); return; }
 
   const ev = {
-    id: editingId || Date.now().toString(),
-    title, cat: selectedCat, dateStart,
-    dateEnd: selectedCat === 'rdv' ? dateStart : dateEnd,
+    title,
+    cat: selectedCat,
+    date_start: dateStart,
+    date_end: selectedCat === 'rdv' ? dateStart : dateEnd,
     content
   };
 
   if (editingId) {
-    events = events.map(e => e.id === editingId ? ev : e);
+    const ok = await updateEvent(editingId, ev);
+    if (!ok) return;
     showToast('Événement modifié ✓');
   } else {
-    events.push(ev);
+    const created = await insertEvent(ev);
+    if (!created) return;
     showToast('Événement ajouté ✓');
   }
 
-  saveEvents();
+  await loadEvents();
   resetForm();
   showView('cal');
 }
@@ -626,8 +450,7 @@ function renderList() {
     container.innerHTML = '<div class="empty-state"><div class="big">📅</div><p>Aucun événement pour l\'instant.</p></div>';
     return;
   }
-  const sorted = [...events].sort((a,b) => a.dateStart.localeCompare(b.dateStart));
-  container.innerHTML = sorted.map(ev => `
+  container.innerHTML = events.map(ev => `
     <div class="event-item">
       <div class="event-bar ${ev.cat}"></div>
       <div class="event-info">
@@ -638,30 +461,33 @@ function renderList() {
         <div class="event-date">${formatDateRange(ev)}</div>
         ${ev.content ? `<div class="event-content">${ev.content}</div>` : ''}
       </div>
-      <button class="event-delete" onclick="editEvent('${ev.id}')" title="Modifier">✎</button>
-      <button class="event-delete" onclick="deleteEvent('${ev.id}')" title="Supprimer">✕</button>
+      <div class="event-actions">
+        <button class="event-edit" onclick="editEvent('${ev.id}')" title="Modifier">✎</button>
+        <button class="event-delete" onclick="deleteEvent('${ev.id}')" title="Supprimer">✕</button>
+      </div>
     </div>
   `).join('');
 }
 
 function catLabel(cat) {
-  return { rdv: 'Rendez-vous', long: 'Évt. long', vacances: 'Vacances' }[cat] || cat;
+  return { rdv:'Rendez-vous', long:'Évt. long', vacances:'Vacances' }[cat] || cat;
 }
 function formatDateRange(ev) {
-  const d1 = formatDate(ev.dateStart);
-  if (ev.cat === 'rdv' || ev.dateStart === ev.dateEnd) return d1;
-  return d1 + ' → ' + formatDate(ev.dateEnd);
+  const d1 = formatDate(ev.date_start);
+  if (ev.cat === 'rdv' || ev.date_start === ev.date_end) return d1;
+  return d1 + ' → ' + formatDate(ev.date_end);
 }
 function formatDate(str) {
   if (!str) return '';
-  const [y, m, d] = str.split('-');
+  const [y,m,d] = str.split('-');
   return d + ' ' + MONTHS_FR[parseInt(m)-1] + ' ' + y;
 }
 
-function deleteEvent(id) {
+async function deleteEvent(id) {
   if (!confirm('Supprimer cet événement ?')) return;
-  events = events.filter(e => e.id !== id);
-  saveEvents();
+  const ok = await removeEvent(id);
+  if (!ok) return;
+  await loadEvents();
   renderList();
   showToast('Événement supprimé');
 }
@@ -670,31 +496,25 @@ function editEvent(id) {
   const ev = events.find(e => e.id === id);
   if (!ev) return;
   editingId = id;
-  document.querySelector('.form-header h1').textContent = 'Modifier l\'événement';
+  document.getElementById('form-title').textContent = 'Modifier l\'événement';
   document.getElementById('f-title').value = ev.title;
-  document.getElementById('f-date-start').value = ev.dateStart;
-  document.getElementById('f-date-end').value = ev.dateEnd;
-  document.getElementById('f-content').value = ev.content;
+  document.getElementById('f-date-start').value = ev.date_start;
+  document.getElementById('f-date-end').value = ev.date_end || '';
+  document.getElementById('f-content').value = ev.content || '';
   selectCat(ev.cat);
   showView('add');
   document.getElementById('nav-add').classList.add('active');
 }
 
-// ── STORAGE ──
-function saveEvents() {
-  localStorage.setItem('agenda_events', JSON.stringify(events));
-}
-
 // ── TOAST ──
-function showToast(msg) {
+function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  t.className = isError ? 'error show' : 'show';
+  setTimeout(() => t.className = '', 2500);
 }
 
-// ── INIT ──
-renderCalendar();
+init();
 </script>
 </body>
 </html>
