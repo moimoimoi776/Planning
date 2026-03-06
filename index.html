@@ -15,14 +15,14 @@
     --text: #e8e8f0;
     --text-muted: #7a7a90;
     --accent: #c8a96e;
-    --rdv-color: #c86e8f;
-    --rdv-bg: rgba(200,110,143,0.15);
-    --long-color: #6ec8a9;
-    --long-bg: rgba(110,200,169,0.15);
-    --vacances-color: #c8a96e;
-    --vacances-bg: rgba(200,169,110,0.15);
-    --tache-color: #e8d44d;
-    --tache-bg: rgba(232,212,77,0.13);
+    --rdv-color: #4a90e8;
+    --rdv-bg: rgba(74,144,232,0.15);
+    --long-color: #b0b8c8;
+    --long-bg: rgba(176,184,200,0.15);
+    --vacances-color: #f07820;
+    --vacances-bg: rgba(240,120,32,0.15);
+    --tache-color: #3dcc6e;
+    --tache-bg: rgba(61,204,110,0.13);
     --radius: 12px;
     --sidebar: 220px;
   }
@@ -213,6 +213,23 @@
   .modal-content a:hover { opacity:0.8; }
   .modal-actions { display:flex; gap:8px; margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
 
+  /* BREADCRUMB */
+  .breadcrumb { display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-muted); margin-bottom:6px; }
+  .breadcrumb a { color:var(--text-muted); text-decoration:none; cursor:pointer; transition:color 0.15s; }
+  .breadcrumb a:hover { color:var(--accent); }
+  .breadcrumb span { color:var(--border); }
+  .breadcrumb strong { color:var(--text); font-weight:500; }
+
+  /* FILTRES LISTE */
+  .list-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .list-filter-btn { background:var(--surface); border:1px solid var(--border); color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.8rem; padding:6px 14px; border-radius:20px; cursor:pointer; transition:all 0.15s; }
+  .list-filter-btn:hover { border-color:var(--text-muted); color:var(--text); }
+  .list-filter-btn.active-all { background:var(--surface2); border-color:var(--text-muted); color:var(--text); }
+  .list-filter-btn.active-rdv { background:var(--rdv-bg); border-color:var(--rdv-color); color:var(--rdv-color); }
+  .list-filter-btn.active-long { background:var(--long-bg); border-color:var(--long-color); color:var(--long-color); }
+  .list-filter-btn.active-vacances { background:var(--vacances-bg); border-color:var(--vacances-color); color:var(--vacances-color); }
+  .list-filter-btn.active-tache { background:var(--tache-bg); border-color:var(--tache-color); color:var(--tache-color); }
+
   /* EMPTY */
   .empty-state { text-align:center; padding:48px 0; color:var(--text-muted); }
   .empty-state .big { font-size:2.5rem; margin-bottom:10px; }
@@ -279,12 +296,14 @@
   <!-- TACHES -->
   <div class="view" id="view-taches">
     <div class="page-header">
-      <div><h1>Tâches</h1><p>Cochez les tâches accomplies</p></div>
-      <button class="btn-primary" onclick="showView('add'); selectCat('tache')">+ Nouvelle tâche</button>
+      <div>
+        <div class="breadcrumb"><a onclick="showView('cal')">Accueil</a><span>/</span><strong>Tâches</strong></div>
+        <h1>Tâches</h1>
+      </div>
     </div>
+    <button class="btn-primary" style="margin-bottom:16px;" onclick="showView('add'); selectCat('tache')">+ Nouvelle tâche</button>
     <div class="taches-filter" style="margin-bottom:20px;">
-      <button class="filter-btn active" id="filter-all" onclick="setTacheFilter('all')">Toutes</button>
-      <button class="filter-btn" id="filter-todo" onclick="setTacheFilter('todo')">À faire</button>
+      <button class="filter-btn active" id="filter-todo" onclick="setTacheFilter('todo')">À faire</button>
       <button class="filter-btn" id="filter-done" onclick="setTacheFilter('done')">Faites</button>
     </div>
     <div id="taches-list"></div>
@@ -293,7 +312,16 @@
   <!-- LISTE -->
   <div class="view" id="view-list">
     <div class="page-header">
-      <h1>Tous les événements</h1>
+      <div>
+        <div class="breadcrumb"><a onclick="showView('cal')">Accueil</a><span>/</span><strong>Tous les événements</strong></div>
+        <h1>Tous les événements</h1>
+      </div>
+    </div>
+    <div class="list-filters">
+      <button class="list-filter-btn active-all" id="lf-all" onclick="setListFilter('all')">Tous</button>
+      <button class="list-filter-btn" id="lf-rdv" onclick="setListFilter('rdv')">RDV</button>
+      <button class="list-filter-btn" id="lf-long" onclick="setListFilter('long')">Long</button>
+      <button class="list-filter-btn" id="lf-vacances" onclick="setListFilter('vacances')">Vacances</button>
     </div>
     <div class="events-list" id="events-list"></div>
   </div>
@@ -302,8 +330,8 @@
   <div class="view" id="view-add">
     <div class="page-header">
       <div>
-        <h1 id="form-title">Nouveau</h1>
-        <p>Ajoutez un événement à votre calendrier</p>
+        <div class="breadcrumb"><a onclick="showView('cal')">Accueil</a><span>/</span><strong id="form-title">Nouveau</strong></div>
+        <h1 id="form-title-h1">Nouveau</h1>
       </div>
     </div>
     <div class="form-card">
@@ -321,8 +349,18 @@
         </div>
       </div>
       <div class="form-row">
-        <label>Date de début</label>
+        <label id="date-start-label">Date de début</label>
         <input type="date" id="f-date-start">
+      </div>
+      <div class="form-row" id="time-toggle-block">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:0.85rem;font-weight:400;color:var(--text-muted)">
+          <input type="checkbox" id="f-has-time" onchange="toggleTimeField()" style="width:auto;accent-color:var(--rdv-color)">
+          Ajouter une heure
+        </label>
+      </div>
+      <div class="form-row hidden" id="time-block">
+        <label>Heure</label>
+        <input type="time" id="f-time" style="max-width:160px;">
       </div>
       <div class="form-row" id="date-end-block">
         <label>Date de fin</label>
@@ -348,7 +386,10 @@
   <!-- PRESTATAIRES -->
   <div class="view" id="view-prest">
     <div class="page-header">
-      <div><h1>Prestataires</h1><p>Médecins, spécialistes, contacts…</p></div>
+      <div>
+        <div class="breadcrumb"><a onclick="showView('cal')">Accueil</a><span>/</span><strong>Prestataires</strong></div>
+        <h1>Prestataires</h1>
+      </div>
     </div>
     <div class="prest-grid" id="prest-grid"></div>
     <div class="prest-form" id="prest-form">
@@ -394,8 +435,8 @@
 
 <script>
 // ── CONFIG SUPABASE ──
-const SUPABASE_URL = 'https://cmfpolllfchtytrowspilt.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtZnBvbGxsZmNodHl0cndzc3BpbHQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc3MjM5MDI5NywiZXhwIjoyMDg3OTY2Mjk3fQ.WvW_-R5LWhfRQFkrl4InN3g_vX3EklWF1Mh1io83T4A';
+const SUPABASE_URL = 'https://cmfpollfchtytrwspilt.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtZnBvbGxmY2h0eXRyd3NwaWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTAyOTcsImV4cCI6MjA4Nzk2NjI5N30.WvW_-R5LWhfRQFkrl4InN3g_vX3EklWF1Mh1io83T4A';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -405,7 +446,8 @@ let selectedCat = null;
 let editingId = null;
 let editingPrestId = null;
 let currentModalId = null;
-let tacheFilter = 'all';
+let tacheFilter = 'todo';
+let listFilter = 'all';
 let events = [];
 let prestataires = [];
 
@@ -527,8 +569,8 @@ function makeDay(num, other, dayEvents, isToday) {
     dayEvents.slice(0, 3).forEach(ev => {
       const dot = document.createElement('div');
       dot.className = 'day-event ' + ev.cat + (ev.done ? ' done-event' : '');
-      dot.textContent = ev.title;
-      dot.title = ev.title;
+      dot.textContent = (ev.event_time ? ev.event_time + ' ' : '') + ev.title;
+      dot.title = (ev.event_time ? ev.event_time + ' ' : '') + ev.title;
       dot.onclick = (e) => { e.stopPropagation(); openModal(ev.id); };
       evs.appendChild(dot);
     });
@@ -545,7 +587,8 @@ function makeDay(num, other, dayEvents, isToday) {
 function toDateStr(y, m, d) { return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'); }
 function getEventsForDate(dateStr) {
   return events.filter(ev => {
-    if (ev.cat === 'rdv' || ev.cat === 'tache') return ev.date_start === dateStr;
+    if (ev.cat === 'tache') return ev.date_start && ev.date_start === dateStr;
+    if (ev.cat === 'rdv') return ev.date_start === dateStr;
     return dateStr >= ev.date_start && dateStr <= (ev.date_end || ev.date_start);
   });
 }
@@ -562,7 +605,7 @@ function renderTaches() {
   let taches = events.filter(e => e.cat === 'tache');
   if (tacheFilter === 'todo') taches = taches.filter(t => !t.done);
   if (tacheFilter === 'done') taches = taches.filter(t => t.done);
-  taches.sort((a,b) => a.date_start.localeCompare(b.date_start));
+  taches.sort((a,b) => a.title.localeCompare(b.title, 'fr'));
   if (taches.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="big">✓</div><p>Aucune tâche ici.</p></div>';
     return;
@@ -574,7 +617,7 @@ function renderTaches() {
       </div>
       <div class="tache-info">
         <div class="tache-title">${t.title}</div>
-        <div class="tache-date">${formatDate(t.date_start)}</div>
+        ${t.date_start ? `<div class="tache-date">${formatDate(t.date_start)}</div>` : ''}
         ${t.content ? `<div class="event-content-preview">${t.content}</div>` : ''}
       </div>
       <div class="event-actions" onclick="event.stopPropagation()">
@@ -591,14 +634,24 @@ async function toggleDone(id, done) {
   renderCalendar();
 }
 
+// ── FILTRES LISTE ──
+function setListFilter(f) {
+  listFilter = f;
+  document.querySelectorAll('.list-filter-btn').forEach(b => b.className = 'list-filter-btn');
+  document.getElementById('lf-' + f).className = 'list-filter-btn active-' + f;
+  renderList();
+}
+
 // ── LISTE ──
 function renderList() {
   const container = document.getElementById('events-list');
-  if (events.length === 0) {
+  let filtered = events.filter(e => e.cat !== 'tache');
+  if (listFilter !== 'all') filtered = filtered.filter(e => e.cat === listFilter);
+  if (filtered.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="big">📅</div><p>Aucun événement.</p></div>';
     return;
   }
-  const sorted = [...events].sort((a,b) => a.date_start.localeCompare(b.date_start));
+  const sorted = [...filtered].sort((a,b) => a.date_start.localeCompare(b.date_start));
   container.innerHTML = sorted.map(ev => {
     const prest = ev.prestataire_id ? prestataires.find(p => p.id === ev.prestataire_id) : null;
     return `
@@ -630,18 +683,37 @@ function selectCat(cat) {
   const needEnd = cat === 'long' || cat === 'vacances';
   document.getElementById('date-end-block').classList.toggle('hidden', !needEnd);
   document.getElementById('prestataire-block').classList.toggle('hidden', cat !== 'rdv');
+  document.getElementById('time-toggle-block').classList.toggle('hidden', cat !== 'rdv');
+  document.getElementById('date-start-label').innerHTML = cat === 'tache'
+    ? 'Date <span style="font-weight:300;text-transform:none;letter-spacing:0">(optionnel)</span>'
+    : 'Date de début';
+  if (cat === 'rdv') populatePrestSelect();
+  if (cat !== 'rdv') {
+    document.getElementById('f-has-time').checked = false;
+    document.getElementById('time-block').classList.add('hidden');
+  }
+}
+function toggleTimeField() {
+  const checked = document.getElementById('f-has-time').checked;
+  document.getElementById('time-block').classList.toggle('hidden', !checked);
+  if (!checked) document.getElementById('f-time').value = '';
 }
 function resetForm() {
   selectedCat = null; editingId = null;
   document.getElementById('f-title').value = '';
   document.getElementById('f-date-start').value = '';
   document.getElementById('f-date-end').value = '';
+  document.getElementById('f-time').value = '';
+  document.getElementById('f-has-time').checked = false;
   document.getElementById('f-content').value = '';
   document.getElementById('f-prestataire').value = '';
   ['rdv','long','vacances','tache'].forEach(c => document.getElementById('cat-'+c).className = 'cat-btn');
   document.getElementById('date-end-block').classList.add('hidden');
   document.getElementById('prestataire-block').classList.add('hidden');
+  document.getElementById('time-toggle-block').classList.add('hidden');
+  document.getElementById('time-block').classList.add('hidden');
   document.getElementById('form-title').textContent = 'Nouveau';
+  document.getElementById('form-title-h1').textContent = 'Nouveau';
 }
 function populatePrestSelect() {
   const sel = document.getElementById('f-prestataire');
@@ -655,13 +727,16 @@ async function saveEvent() {
   const dateEnd = document.getElementById('f-date-end').value;
   const content = document.getElementById('f-content').value.trim();
   const prestId = document.getElementById('f-prestataire').value || null;
+  const hasTime = document.getElementById('f-has-time').checked;
+  const eventTime = hasTime ? document.getElementById('f-time').value : null;
   if (!title) { showToast('Veuillez saisir un titre.', true); return; }
   if (!selectedCat) { showToast('Choisissez une catégorie.', true); return; }
-  if (!dateStart) { showToast('Choisissez une date.', true); return; }
+  if (!dateStart && selectedCat !== 'tache') { showToast('Choisissez une date.', true); return; }
+  if (hasTime && !eventTime) { showToast('Saisissez une heure.', true); return; }
   const needEnd = selectedCat === 'long' || selectedCat === 'vacances';
   if (needEnd && !dateEnd) { showToast('Choisissez une date de fin.', true); return; }
   if (needEnd && dateEnd < dateStart) { showToast('Date de fin avant date de début.', true); return; }
-  const ev = { title, cat: selectedCat, date_start: dateStart, date_end: needEnd ? dateEnd : dateStart, content, prestataire_id: prestId };
+  const ev = { title, cat: selectedCat, date_start: dateStart || null, date_end: needEnd ? dateEnd : (dateStart || null), content, prestataire_id: prestId, event_time: eventTime };
   if (editingId) {
     const ok = await updateEventDB(editingId, ev);
     if (!ok) return;
@@ -680,6 +755,7 @@ function editEvent(id) {
   if (!ev) return;
   editingId = id;
   document.getElementById('form-title').textContent = 'Modifier';
+  document.getElementById('form-title-h1').textContent = 'Modifier';
   document.getElementById('f-title').value = ev.title;
   document.getElementById('f-date-start').value = ev.date_start;
   document.getElementById('f-date-end').value = ev.date_end || '';
@@ -687,6 +763,11 @@ function editEvent(id) {
   populatePrestSelect();
   document.getElementById('f-prestataire').value = ev.prestataire_id || '';
   selectCat(ev.cat);
+  if (ev.cat === 'rdv' && ev.event_time) {
+    document.getElementById('f-has-time').checked = true;
+    document.getElementById('f-time').value = ev.event_time;
+    document.getElementById('time-block').classList.remove('hidden');
+  }
   closeModalDirect();
   showView('add');
 }
@@ -708,12 +789,14 @@ function openModal(id) {
   currentModalId = id;
   document.getElementById('modal-cat').className = 'modal-cat ' + ev.cat;
   document.getElementById('modal-cat').textContent = catLabel(ev.cat);
-  document.getElementById('modal-title').textContent = ev.title;
+  const timePrefix = ev.event_time ? `<span style="font-size:1.1rem;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-weight:500;margin-right:10px;">${ev.event_time}</span>` : '';
+  document.getElementById('modal-title').innerHTML = timePrefix + ev.title;
   document.getElementById('modal-date').textContent = formatDateRange(ev);
   const prest = ev.prestataire_id ? prestataires.find(p => p.id === ev.prestataire_id) : null;
   const prestBlock = document.getElementById('modal-prest');
   if (prest) {
     document.getElementById('modal-prest-name').textContent = prest.nom;
+    document.getElementById('modal-prest-desc').style.whiteSpace = 'pre-wrap';
     document.getElementById('modal-prest-desc').textContent = prest.description || '';
     prestBlock.classList.remove('hidden');
   } else { prestBlock.classList.add('hidden'); }
