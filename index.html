@@ -245,6 +245,66 @@
   #toast.show { transform:translateY(0); opacity:1; }
   #toast.err { border-color:#c86e6e; color:#c86e6e; }
 
+  /* MOBILE BOTTOM NAV */
+  #mobile-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-nav-inner { display: flex; justify-content: space-around; align-items: stretch; }
+  .mob-btn {
+    flex: 1; background: none; border: none;
+    color: var(--text-muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.62rem; font-weight: 500;
+    padding: 10px 4px 8px;
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; transition: color 0.15s;
+  }
+  .mob-btn .mob-icon { font-size: 1.3rem; line-height: 1; }
+  .mob-btn.active { color: var(--accent); }
+  .mob-btn.mob-add { color: var(--bg); }
+  .mob-btn.mob-add .mob-icon-wrap {
+    background: var(--accent); border-radius: 50%;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; margin-top: -18px;
+    box-shadow: 0 4px 12px rgba(200,169,110,0.4);
+  }
+
+  @media (max-width: 700px) {
+    #sidebar { display: none; }
+    #mobile-nav { display: block; }
+    #main { margin-left: 0; padding: 16px 12px; padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+    .page-header { margin-bottom: 16px; }
+    .page-header h1 { font-size: 1.5rem; }
+    .months-grid { grid-template-columns: 1fr; gap: 12px; }
+    .cal-header-mobile { display: flex !important; }
+    .nav-btns { display: none; }
+    .form-card { padding: 20px 16px; }
+    .cat-selector { gap: 6px; }
+    .cat-btn { min-width: 80px; font-size: 0.75rem; padding: 8px 4px; }
+    .events-list { max-width: 100%; }
+    .tache-item { max-width: 100%; }
+    .prest-grid { grid-template-columns: 1fr; }
+    .modal { padding: 20px 16px; border-radius: 16px 16px 0 0; max-height: 90vh; }
+    .overlay { align-items: flex-end; padding: 0; }
+    #toast { bottom: calc(70px + 12px + env(safe-area-inset-bottom)); right: 12px; }
+    .day { min-height: 38px; }
+    .day-num { font-size: 0.78rem; min-width: 22px; }
+    .day-event { font-size: 0.6rem; }
+    .month-card { padding: 12px; }
+    .breadcrumb { font-size: 0.75rem; }
+  }
+
+  /* Mobile calendar header */
+  .cal-header-mobile { display: none; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-header-mobile h2 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: var(--text); }
+  .mob-nav-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+
   ::-webkit-scrollbar { width:5px; }
   ::-webkit-scrollbar-track { background:var(--bg); }
   ::-webkit-scrollbar-thumb { background:var(--border); border-radius:5px; }
@@ -431,6 +491,32 @@
   </div>
 </div>
 
+<!-- MOBILE BOTTOM NAV -->
+<nav id="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mob-btn active" id="mob-cal" onclick="showView('cal')">
+      <span class="mob-icon">📅</span>
+      <span>Agenda</span>
+    </button>
+    <button class="mob-btn" id="mob-taches" onclick="showView('taches')">
+      <span class="mob-icon">✓</span>
+      <span>Tâches</span>
+    </button>
+    <button class="mob-btn mob-add" id="mob-add" onclick="showView('add')">
+      <span class="mob-icon-wrap">＋</span>
+      <span style="margin-top:4px">Nouveau</span>
+    </button>
+    <button class="mob-btn" id="mob-list" onclick="showView('list')">
+      <span class="mob-icon">≡</span>
+      <span>Événements</span>
+    </button>
+    <button class="mob-btn" id="mob-prest" onclick="showView('prest')">
+      <span class="mob-icon">👤</span>
+      <span>Prestataires</span>
+    </button>
+  </div>
+</nav>
+
 <div id="toast"></div>
 
 <script>
@@ -503,17 +589,23 @@ async function removePrest(id) {
 }
 
 // ── NAVIGATION ──
+const isMobile = () => window.innerWidth <= 700;
+
 function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mob-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v).classList.add('active');
   const nb = document.getElementById('nav-' + v);
   if (nb) nb.classList.add('active');
+  const mb = document.getElementById('mob-' + v);
+  if (mb) mb.classList.add('active');
   if (v === 'cal') renderCalendar();
   if (v === 'list') renderList();
   if (v === 'taches') renderTaches();
   if (v === 'prest') renderPrest();
   if (v === 'add') { if (!editingId) resetForm(); }
+  window.scrollTo(0, 0);
 }
 function offsetMonths(n) { startOffset += n; renderCalendar(); }
 function goToday() { startOffset = 0; renderCalendar(); }
@@ -523,13 +615,24 @@ function renderCalendar() {
   const today = new Date();
   const grid = document.getElementById('months-grid');
   grid.innerHTML = '';
-  const s = new Date(today.getFullYear(), today.getMonth() + startOffset, 1);
-  const e = new Date(today.getFullYear(), today.getMonth() + startOffset + 5, 1);
-  document.getElementById('cal-title').textContent =
-    MONTHS_FR[s.getMonth()] + ' ' + s.getFullYear() + ' — ' + MONTHS_FR[e.getMonth()] + ' ' + e.getFullYear();
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(today.getFullYear(), today.getMonth() + startOffset + i, 1);
-    grid.appendChild(renderMonth(d, today));
+
+  if (isMobile()) {
+    // Mobile: 12 months scrollable starting from current month
+    document.getElementById('cal-title').textContent = 'Calendrier';
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      grid.appendChild(renderMonth(d, today));
+    }
+  } else {
+    // Desktop: 6 months grid with offset
+    const s = new Date(today.getFullYear(), today.getMonth() + startOffset, 1);
+    const e = new Date(today.getFullYear(), today.getMonth() + startOffset + 5, 1);
+    document.getElementById('cal-title').textContent =
+      MONTHS_FR[s.getMonth()] + ' ' + s.getFullYear() + ' — ' + MONTHS_FR[e.getMonth()] + ' ' + e.getFullYear();
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() + startOffset + i, 1);
+      grid.appendChild(renderMonth(d, today));
+    }
   }
 }
 function renderMonth(date, today) {
@@ -906,6 +1009,10 @@ function showToast(msg, isErr = false) {
 
 // ── START ──
 init();
+window.addEventListener('resize', () => {
+  const calView = document.getElementById('view-cal');
+  if (calView.classList.contains('active')) renderCalendar();
+});
 </script>
 </body>
 </html>
