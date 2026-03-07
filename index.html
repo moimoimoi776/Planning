@@ -6,6 +6,7 @@
 <title>Mon Agenda</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --bg: #0f0f13;
@@ -245,6 +246,68 @@
   #toast.show { transform:translateY(0); opacity:1; }
   #toast.err { border-color:#c86e6e; color:#c86e6e; }
 
+  /* AUTH OVERLAY */
+  #auth-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.85);
+    z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  #auth-overlay.hidden { display:none; }
+  .auth-box {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:32px; width:100%; max-width:420px;
+  }
+  .auth-logo { font-family:'DM Serif Display',serif; font-size:1.8rem; color:var(--accent); margin-bottom:4px; }
+  .auth-logo span { color:var(--text-muted); font-size:0.8rem; display:block; font-family:'DM Sans',sans-serif; font-weight:300; margin-bottom:24px; }
+  .auth-tabs { display:flex; gap:0; margin-bottom:24px; border-bottom:1px solid var(--border); }
+  .auth-tab { flex:1; background:none; border:none; color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:500; padding:10px; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.15s; }
+  .auth-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .auth-form { display:none; }
+  .auth-form.active { display:block; }
+  .auth-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem; padding:11px 14px; outline:none; margin-bottom:12px; transition:border-color 0.15s; }
+  .auth-input:focus { border-color:var(--accent); }
+  .auth-btn { width:100%; background:var(--accent); color:var(--bg); border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.95rem; font-weight:600; padding:12px; cursor:pointer; transition:opacity 0.15s; margin-top:4px; }
+  .auth-btn:hover { opacity:0.85; }
+  .auth-link { background:none; border:none; color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.82rem; cursor:pointer; text-decoration:underline; margin-top:12px; display:block; text-align:center; transition:color 0.15s; }
+  .auth-link:hover { color:var(--accent); }
+  .auth-msg { font-size:0.83rem; padding:10px 12px; border-radius:8px; margin-bottom:12px; display:none; }
+  .auth-msg.ok { background:rgba(61,204,110,0.15); color:var(--tache-color); display:block; }
+  .auth-msg.err { background:rgba(200,110,110,0.15); color:#c86e6e; display:block; }
+  .auth-msg.warn { background:rgba(200,169,110,0.15); color:var(--accent); display:block; }
+
+  /* BOUTON COMPTE */
+  #btn-compte {
+    position:absolute; top:20px; right:24px;
+    background:var(--surface2); border:1px solid var(--border);
+    color:var(--text-muted); font-family:'DM Sans',sans-serif;
+    font-size:0.8rem; padding:6px 14px; border-radius:20px;
+    cursor:pointer; transition:all 0.15s; z-index:10;
+  }
+  #btn-compte:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* COMPTE POPUP */
+  .compte-popup {
+    position:absolute; top:52px; right:24px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:16px; min-width:260px;
+    z-index:50; display:none;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  .compte-popup.open { display:block; }
+  .compte-email { font-size:0.82rem; color:var(--text-muted); margin-bottom:12px; word-break:break-all; }
+  .compte-email strong { color:var(--text); display:block; margin-bottom:2px; }
+
+  /* ADMIN PANEL */
+  .admin-section { margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+  .admin-title { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:10px; }
+  .admin-user { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:0.83rem; }
+  .admin-user:last-child { border-bottom:none; }
+  .admin-user-email { color:var(--text-muted); flex:1; overflow:hidden; text-overflow:ellipsis; }
+  .admin-user-status { font-size:0.7rem; padding:2px 7px; border-radius:10px; margin:0 6px; flex-shrink:0; }
+  .admin-user-status.pending { background:var(--vacances-bg); color:var(--vacances-color); }
+  .admin-user-status.approved { background:var(--tache-bg); color:var(--tache-color); }
+  .admin-del { background:none; border:none; color:var(--border); cursor:pointer; font-size:0.85rem; transition:color 0.15s; }
+  .admin-del:hover { color:#c86e6e; }
+
   /* MOBILE BOTTOM NAV */
   #mobile-nav {
     display: none;
@@ -444,7 +507,16 @@
   </div>
 
   <!-- PRESTATAIRES -->
-  <div class="view" id="view-prest">
+  <div class="view" id="view-prest" style="position:relative;">
+    <button id="btn-compte" onclick="toggleComptePopup()">👤 Mon compte</button>
+    <div class="compte-popup" id="compte-popup">
+      <div class="compte-email"><strong id="compte-email-display"></strong>Connecté</div>
+      <button class="auth-btn" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);margin-top:0;" onclick="signOut()">Se déconnecter</button>
+      <div class="admin-section hidden" id="admin-section">
+        <div class="admin-title">👑 Admin — Comptes utilisateurs</div>
+        <div id="admin-users-list"></div>
+      </div>
+    </div>
     <div class="page-header">
       <div>
         <div class="breadcrumb"><a onclick="showView('cal')">Accueil</a><span>/</span><strong>Prestataires</strong></div>
@@ -491,6 +563,33 @@
   </div>
 </div>
 
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo">Agenda<span>Personnel</span></div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Se connecter</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Créer un compte</button>
+    </div>
+    <!-- LOGIN -->
+    <div class="auth-form active" id="auth-login">
+      <div class="auth-msg" id="login-msg"></div>
+      <input class="auth-input" type="email" id="login-email" placeholder="Email">
+      <input class="auth-input" type="password" id="login-pwd" placeholder="Mot de passe">
+      <button class="auth-btn" onclick="doLogin()">Se connecter</button>
+      <button class="auth-link" onclick="doForgotPassword()">Mot de passe oublié ?</button>
+    </div>
+    <!-- SIGNUP -->
+    <div class="auth-form" id="auth-signup">
+      <div class="auth-msg" id="signup-msg"></div>
+      <input class="auth-input" type="email" id="signup-email" placeholder="Email">
+      <input class="auth-input" type="password" id="signup-pwd" placeholder="Mot de passe (8 caractères min.)">
+      <input class="auth-input" type="password" id="signup-pwd2" placeholder="Confirmer le mot de passe">
+      <button class="auth-btn" onclick="doSignup()">Créer mon compte</button>
+    </div>
+  </div>
+</div>
+
 <!-- MOBILE BOTTOM NAV -->
 <nav id="mobile-nav">
   <div class="mobile-nav-inner">
@@ -526,6 +625,17 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 
+// ── CONFIG EMAILJS ──
+const EJS_SERVICE = 'service_196j484';
+const EJS_TEMPLATE = 'template_7kfjskq';
+const EJS_KEY = 'z0w-6ewXZ2OJAnjy3';
+const ADMIN_EMAIL = 'vovinam@hotmail.com';
+emailjs.init(EJS_KEY);
+
+// ── STATE ──
+let currentUser = null;
+let currentProfile = null;
+
 // ── STATE ──
 let startOffset = 0;
 let selectedCat = null;
@@ -542,8 +652,195 @@ const DAYS_FR = ['L','M','M','J','V','S','D'];
 
 // ── INIT ──
 async function init() {
+  // Vérifier si c'est un lien de validation admin
+  const params = new URLSearchParams(window.location.search);
+  const approveId = params.get('approve');
+  if (approveId) {
+    await handleApprove(approveId);
+    return;
+  }
+
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) {
+    showAuthOverlay();
+    return;
+  }
+  await onLogin(session.user);
+}
+
+async function onLogin(user) {
+  currentUser = user;
+  // Charger le profil
+  const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single();
+  currentProfile = profile;
+
+  if (!profile || !profile.approved) {
+    showAuthMessage('login', 'Votre compte est en attente de validation par l\'administrateur.', 'warn');
+    showAuthOverlay();
+    // Masquer les tabs et formulaire, juste le message
+    document.getElementById('auth-login').innerHTML = '<div class="auth-msg warn" style="display:block">⏳ Votre compte est en attente de validation par l\'administrateur.<br><br><button class="auth-link" onclick="doSignOut()" style="display:inline">Se déconnecter</button></div>';
+    document.querySelector('.auth-tabs').style.display = 'none';
+    return;
+  }
+
+  hideAuthOverlay();
+  document.getElementById('compte-email-display').textContent = user.email;
+  if (profile.is_admin) {
+    document.getElementById('admin-section').classList.remove('hidden');
+  }
+
   await Promise.all([loadEvents(), loadPrestataires()]);
   renderCalendar();
+}
+
+function showAuthOverlay() {
+  document.getElementById('auth-overlay').classList.remove('hidden');
+}
+function hideAuthOverlay() {
+  document.getElementById('auth-overlay').classList.add('hidden');
+}
+
+// ── AUTH TABS ──
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  document.querySelector(`.auth-tab:nth-child(${tab === 'login' ? 1 : 2})`).classList.add('active');
+  document.getElementById('auth-' + tab).classList.add('active');
+}
+
+function showAuthMessage(form, msg, type) {
+  const el = document.getElementById(form + '-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'auth-msg ' + type;
+}
+
+// ── LOGIN ──
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd = document.getElementById('login-pwd').value;
+  if (!email || !pwd) { showAuthMessage('login', 'Remplissez tous les champs.', 'err'); return; }
+  const { data, error } = await db.auth.signInWithPassword({ email, password: pwd });
+  if (error) { showAuthMessage('login', 'Email ou mot de passe incorrect.', 'err'); return; }
+  await onLogin(data.user);
+}
+
+// ── SIGNUP ──
+async function doSignup() {
+  const email = document.getElementById('signup-email').value.trim();
+  const pwd = document.getElementById('signup-pwd').value;
+  const pwd2 = document.getElementById('signup-pwd2').value;
+  if (!email || !pwd) { showAuthMessage('signup', 'Remplissez tous les champs.', 'err'); return; }
+  if (pwd.length < 8) { showAuthMessage('signup', 'Mot de passe trop court (8 caractères min.).', 'err'); return; }
+  if (pwd !== pwd2) { showAuthMessage('signup', 'Les mots de passe ne correspondent pas.', 'err'); return; }
+
+  const { data, error } = await db.auth.signUp({ email, password: pwd });
+  if (error) { showAuthMessage('signup', error.message, 'err'); return; }
+
+  // Créer le profil en attente
+  await db.from('profiles').insert([{ id: data.user.id, email, approved: false, is_admin: false }]);
+
+  // Envoyer email à l'admin
+  const approveUrl = `${window.location.origin}${window.location.pathname}?approve=${data.user.id}`;
+  try {
+    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+      user_email: email,
+      approve_url: approveUrl
+    });
+  } catch(e) { console.error('EmailJS error:', e); }
+
+  showAuthMessage('signup', '✓ Compte créé ! Un administrateur doit valider votre accès. Vous recevrez une confirmation.', 'ok');
+  document.getElementById('signup-email').value = '';
+  document.getElementById('signup-pwd').value = '';
+  document.getElementById('signup-pwd2').value = '';
+}
+
+// ── FORGOT PASSWORD ──
+async function doForgotPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { showAuthMessage('login', 'Saisissez votre email d\'abord.', 'err'); return; }
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href
+  });
+  if (error) { showAuthMessage('login', error.message, 'err'); return; }
+  showAuthMessage('login', '✓ Email de réinitialisation envoyé !', 'ok');
+}
+
+// ── SIGN OUT ──
+async function signOut() {
+  await db.auth.signOut();
+  currentUser = null; currentProfile = null;
+  document.querySelector('.auth-tabs').style.display = '';
+  document.getElementById('auth-login').innerHTML = `
+    <div class="auth-msg" id="login-msg"></div>
+    <input class="auth-input" type="email" id="login-email" placeholder="Email">
+    <input class="auth-input" type="password" id="login-pwd" placeholder="Mot de passe">
+    <button class="auth-btn" onclick="doLogin()">Se connecter</button>
+    <button class="auth-link" onclick="doForgotPassword()">Mot de passe oublié ?</button>
+  `;
+  toggleComptePopup(true);
+  showAuthOverlay();
+  switchAuthTab('login');
+}
+async function doSignOut() { await signOut(); }
+
+// ── APPROVE ──
+async function handleApprove(userId) {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) {
+    // Stocker l'ID à approuver et demander connexion admin
+    localStorage.setItem('pending_approve', userId);
+    showAuthOverlay();
+    showAuthMessage('login', '🔐 Connectez-vous en tant qu\'admin pour valider ce compte.', 'warn');
+    return;
+  }
+  const { data: profile } = await db.from('profiles').select('*').eq('id', session.user.id).single();
+  if (!profile?.is_admin) {
+    showAuthOverlay();
+    showAuthMessage('login', '⛔ Seul un admin peut valider des comptes.', 'err');
+    return;
+  }
+  // Approuver
+  await db.from('profiles').update({ approved: true }).eq('id', userId);
+  // Nettoyer l'URL
+  window.history.replaceState({}, '', window.location.pathname);
+  showToast('✓ Compte validé !');
+  await onLogin(session.user);
+}
+
+// ── COMPTE POPUP ──
+function toggleComptePopup(forceClose = false) {
+  const popup = document.getElementById('compte-popup');
+  if (forceClose) { popup.classList.remove('open'); return; }
+  popup.classList.toggle('open');
+  if (popup.classList.contains('open') && currentProfile?.is_admin) {
+    loadAdminUsers();
+  }
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#compte-popup') && !e.target.closest('#btn-compte')) {
+    document.getElementById('compte-popup')?.classList.remove('open');
+  }
+});
+
+async function loadAdminUsers() {
+  const { data } = await db.from('profiles').select('*').order('created_at');
+  const list = document.getElementById('admin-users-list');
+  if (!data || data.length === 0) { list.innerHTML = '<div style="color:var(--text-muted);font-size:0.82rem">Aucun utilisateur.</div>'; return; }
+  list.innerHTML = data.map(u => `
+    <div class="admin-user">
+      <span class="admin-user-email">${u.email}</span>
+      <span class="admin-user-status ${u.approved ? 'approved' : 'pending'}">${u.approved ? '✓' : '⏳'}</span>
+      ${!u.is_admin ? `<button class="admin-del" onclick="deleteUser('${u.id}')" title="Supprimer">✕</button>` : '<span style="font-size:0.7rem;color:var(--accent)">admin</span>'}
+    </div>
+  `).join('');
+}
+
+async function deleteUser(id) {
+  if (!confirm('Supprimer ce compte ?')) return;
+  await db.from('profiles').delete().eq('id', id);
+  loadAdminUsers();
+  showToast('Compte supprimé');
 }
 
 // ── SUPABASE ──
