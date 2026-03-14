@@ -81,8 +81,8 @@
   .cal-layout { display:grid; grid-template-columns:3fr 2fr; gap:16px; align-items:start; }
   .months-grid { display:grid; grid-template-columns:1fr; gap:16px; }
   .month-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
-  .month-title { font-family:'DM Serif Display',serif; font-size:1.1rem; color:var(--accent); margin-bottom:10px; }
-  .month-title span { color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:300; margin-left:4px; }
+  .month-title { font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:800; color:var(--accent); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em; }
+  .month-title span { color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.75rem; font-weight:400; margin-left:6px; text-transform:none; letter-spacing:0; }
   .weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
   .weekdays span { text-align:center; font-size:0.62rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; padding:3px 0; }
   .days-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
@@ -105,30 +105,40 @@
 
   /* SIDEBAR RÉSUMÉ */
   .cal-sidebar { display:flex; flex-direction:column; gap:12px; }
-  .resume-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
-  .resume-box-title { font-family:'DM Serif Display',serif; font-size:1rem; color:var(--accent); margin-bottom:12px; }
-  .resume-top-row { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+  .resume-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+  .resume-box-title { font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:800; color:var(--accent); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.08em; }
+  .resume-top-row { display:flex; flex-direction:column; gap:12px; margin-bottom:16px; }
   
-  /* Encadrés À faire + Médical */
-  .mini-box { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px; }
-  .mini-box-title { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:8px; }
-  .mini-task { font-size:0.78rem; color:var(--text); padding:3px 0; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:6px; }
+  /* Encadrés À faire + Médical + Vacances */
+  .mini-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+  .mini-box-title { font-size:0.65rem; font-weight:700; font-family:'DM Sans',sans-serif; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:10px; }
+  .mini-task { font-size:0.78rem; color:var(--text); padding:4px 0; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:6px; }
   .mini-task:last-child { border-bottom:none; }
   .mini-task-date { font-size:0.68rem; color:var(--text-muted); flex-shrink:0; }
-  .mini-task-title { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mini-task-title { flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .mini-task.done-task { opacity:0.45; text-decoration:line-through; }
-  .mini-medical { font-size:0.78rem; color:var(--text); padding:3px 0; border-bottom:1px solid var(--border); display:flex; gap:6px; align-items:baseline; }
+  .mini-medical { font-size:0.78rem; color:var(--text); padding:4px 0; border-bottom:1px solid var(--border); display:flex; gap:6px; align-items:baseline; }
   .mini-medical:last-child { border-bottom:none; }
-  .mini-medical-date { font-size:0.7rem; color:var(--rdv-color); flex-shrink:0; font-weight:600; }
-  .mini-medical-title { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mini-medical-date { font-size:0.7rem; flex-shrink:0; font-weight:600; }
+  .mini-medical-title { flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   /* Résumé événements */
-  .resume-events { display:flex; flex-direction:column; gap:6px; }
-  .resume-ev { font-size:0.8rem; line-height:1.5; padding-bottom:6px; border-bottom:1px solid var(--border); }
-  .resume-ev:last-child { border-bottom:none; padding-bottom:0; }
-  .resume-ev-date { font-size:0.72rem; font-weight:600; color:var(--text-muted); }
-  .resume-ev-title { color:var(--text); }
-  .resume-ev-desc { color:var(--text-muted); font-size:0.75rem; }
+  .resume-events { display:flex; flex-direction:column; gap:0; }
+  .resume-ev { font-size:0.8rem; line-height:1.6; padding:5px 0; border-bottom:1px solid var(--border); overflow:hidden; }
+  .resume-ev:last-child { border-bottom:none; }
+  .resume-ev-line { display:flex; align-items:baseline; gap:0; white-space:nowrap; overflow:hidden; }
+  .resume-ev-date { font-size:0.72rem; font-weight:600; color:var(--text-muted); flex-shrink:0; }
+  .resume-ev-title { color:var(--text); font-weight:700; flex-shrink:0; }
+  .resume-ev-sep { color:var(--text-muted); flex-shrink:0; margin:0 4px; }
+  .resume-ev-desc-wrap { flex:1; overflow:hidden; position:relative; }
+  .resume-ev-desc { color:var(--text-muted); font-size:0.75rem; font-weight:400; white-space:nowrap; display:inline-block; }
+  .resume-ev:hover .resume-ev-desc { animation: scroll-text 6s linear forwards; }
+  @keyframes scroll-text {
+    0% { transform: translateX(0); }
+    10% { transform: translateX(0); }
+    90% { transform: translateX(var(--scroll-dist, -100%)); }
+    100% { transform: translateX(var(--scroll-dist, -100%)); }
+  }
 
   /* FORMULAIRE */
   .form-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; max-width:620px; }
@@ -1004,11 +1014,13 @@ function renderSidebar(m1, m2) {
   }
 
   function resumeItem(ev) {
-    const desc = ev.content ? ev.content.replace(/\n/g,' ').substring(0,80) : '';
+    const desc = ev.content ? ev.content.replace(/\n/g,' ') : '';
     return `<div class="resume-ev" onclick="openModal('${ev.id}')" style="cursor:pointer">
-      <span class="resume-ev-date">${formatMediumDateRange(ev)}</span>
-      <span class="resume-ev-title"> · ${ev.title}</span>
-      ${desc ? `<div class="resume-ev-desc">${desc}</div>` : ''}
+      <div class="resume-ev-line">
+        <span class="resume-ev-date">${formatMediumDateRange(ev)}&nbsp;</span>
+        <span class="resume-ev-title">· ${ev.title}</span>
+        ${desc ? `<span class="resume-ev-sep">-</span><span class="resume-ev-desc-wrap"><span class="resume-ev-desc" data-text="${desc.replace(/"/g,'&quot;')}">${desc}</span></span>` : ''}
+      </div>
     </div>`;
   }
 
@@ -1037,10 +1049,12 @@ function renderSidebar(m1, m2) {
       ${rdvs.length > 0 ? `<div class="resume-events" style="margin-top:10px">${rdvs.map(resumeItem).join('')}</div>` : ''}
 
       ${longs.length > 0 ? `<div class="resume-events" style="margin-top:10px">${longs.map(ev => {
-        const desc = ev.content ? ev.content.replace(/\n/g,' ').substring(0,80) : '';
-        return `<div class="resume-ev" onclick="openModal('${ev.id}')" style="cursor:pointer;font-style:italic;font-weight:700">
-          <span class="resume-ev-title">${ev.title}</span>
-          ${desc ? `<div class="resume-ev-desc" style="font-weight:400">${desc}</div>` : ''}
+        const desc = ev.content ? ev.content.replace(/\n/g,' ') : '';
+        return `<div class="resume-ev" onclick="openModal('${ev.id}')" style="cursor:pointer">
+          <div class="resume-ev-line" style="font-style:italic">
+            <span class="resume-ev-title" style="font-weight:700">${ev.title}</span>
+            ${desc ? `<span class="resume-ev-sep">-</span><span class="resume-ev-desc-wrap"><span class="resume-ev-desc" style="font-style:normal">${desc}</span></span>` : ''}
+          </div>
         </div>`;
       }).join('')}</div>` : ''}
 
@@ -1188,6 +1202,17 @@ function renderList() {
       </div>
     </div>`;
   }).join('');
+  // Calcul de la distance de défilement pour chaque description
+  requestAnimationFrame(() => {
+    sidebar.querySelectorAll('.resume-ev-desc').forEach(el => {
+      const wrap = el.parentElement;
+      if (!wrap) return;
+      const overflow = el.scrollWidth - wrap.clientWidth;
+      if (overflow > 0) {
+        el.style.setProperty('--scroll-dist', '-' + overflow + 'px');
+      }
+    });
+  });
 }
 
 // ── FORMULAIRE ÉVÉNEMENT ──
