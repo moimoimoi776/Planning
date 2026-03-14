@@ -78,8 +78,9 @@
   .nav-btns button:hover { background:var(--surface2); border-color:var(--accent); color:var(--accent); }
   
   /* NOUVELLE MISE EN PAGE CALENDRIER */
-  .cal-layout { display:grid; grid-template-columns:2fr 1fr; gap:16px; align-items:start; }
-  .months-grid { display:grid; grid-template-columns:1fr; gap:16px; }
+  .cal-layout { display:grid; grid-template-columns:2fr 1fr; gap:16px; align-items:start; min-width:0; }
+  .cal-layout > * { min-width:0; }
+  .months-grid { display:grid; grid-template-columns:1fr; gap:16px; min-width:0; }
   .month-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
   .month-title { font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:800; color:var(--accent); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em; }
   .month-title span { color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.75rem; font-weight:400; margin-left:6px; text-transform:none; letter-spacing:0; }
