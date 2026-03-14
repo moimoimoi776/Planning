@@ -78,8 +78,8 @@
   .nav-btns button:hover { background:var(--surface2); border-color:var(--accent); color:var(--accent); }
   
   /* NOUVELLE MISE EN PAGE CALENDRIER */
-  .cal-layout { display:grid; grid-template-columns:1fr 300px; gap:16px; align-items:start; }
-  .months-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .cal-layout { display:grid; grid-template-columns:3fr 2fr; gap:16px; align-items:start; }
+  .months-grid { display:grid; grid-template-columns:1fr; gap:16px; }
   .month-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
   .month-title { font-family:'DM Serif Display',serif; font-size:1.1rem; color:var(--accent); margin-bottom:10px; }
   .month-title span { color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:300; margin-left:4px; }
@@ -432,15 +432,10 @@
   <!-- CALENDRIER -->
   <div class="view active" id="view-cal">
     <div class="page-header">
-      <div>
-        <h1 id="cal-title">Calendrier</h1>
-      </div>
       <div class="nav-btns">
-        <button onclick="offsetMonths(-2)">‹‹</button>
         <button onclick="offsetMonths(-1)">‹</button>
-        <button onclick="goToday()">Aujourd'hui</button>
+        <span id="cal-title" style="font-family:'DM Serif Display',serif; font-size:1.4rem; color:var(--text); padding:0 8px;"></span>
         <button onclick="offsetMonths(1)">›</button>
-        <button onclick="offsetMonths(2)">››</button>
       </div>
     </div>
     <div class="cal-layout">
@@ -960,7 +955,7 @@ function renderCalendar() {
     const m1 = new Date(today.getFullYear(), today.getMonth() + startOffset, 1);
     const m2 = new Date(today.getFullYear(), today.getMonth() + startOffset + 1, 1);
     document.getElementById('cal-title').textContent =
-      MONTHS_FR[m1.getMonth()] + ' ' + m1.getFullYear() + ' — ' + MONTHS_FR[m2.getMonth()] + ' ' + m2.getFullYear();
+      MONTHS_FR[m1.getMonth()] + ' / ' + MONTHS_FR[m2.getMonth()];
     grid.appendChild(renderMonth(m1, today));
     grid.appendChild(renderMonth(m2, today));
     renderSidebar(m1, m2);
