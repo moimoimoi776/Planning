@@ -107,7 +107,7 @@
   .cal-sidebar { display:flex; flex-direction:column; gap:12px; }
   .resume-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
   .resume-box-title { font-family:'DM Serif Display',serif; font-size:1rem; color:var(--accent); margin-bottom:12px; }
-  .resume-top-row { display:flex; gap:10px; margin-bottom:14px; }
+  .resume-top-row { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
   
   /* Encadrés À faire + Médical */
   .mini-box { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px; }
@@ -966,17 +966,15 @@ function renderSidebar(m1, m2) {
   const sidebar = document.getElementById('cal-sidebar');
   if (!sidebar) return;
 
-  // Événements des 2 mois
-  const m1Start = toDateStr(m1.getFullYear(), m1.getMonth(), 1);
-  const m2End = toDateStr(m2.getFullYear(), m2.getMonth(), new Date(m2.getFullYear(), m2.getMonth()+1, 0).getDate());
+  const today2 = new Date(); today2.setHours(0,0,0,0);
+  const todayStr = toDateStr(today2.getFullYear(), today2.getMonth(), today2.getDate());
 
   const eventsInRange = events.filter(ev => {
-    const start = ev.date_start || '';
     const end = ev.date_end || ev.date_start || '';
-    return start <= m2End && end >= m1Start;
+    return ev.cat !== 'tache' && end >= todayStr;
   }).sort((a,b) => (a.date_start||'').localeCompare(b.date_start||''));
 
-  // Tâches (toutes, pas seulement dans la période)
+  // Tâches non faites
   const taches = events.filter(ev => ev.cat === 'tache' && !ev.done)
     .sort((a,b) => {
       if (!a.date_start && !b.date_start) return a.title.localeCompare(b.title);
@@ -985,47 +983,67 @@ function renderSidebar(m1, m2) {
       return a.date_start.localeCompare(b.date_start);
     });
 
-  // RDV avec prestataire dans la période
+  // RDV avec prestataire (médical)
   const medicals = eventsInRange.filter(ev => ev.cat === 'rdv' && ev.prestataire_id);
 
-  // Résumé événements (hors tâches)
-  const resumeEvs = eventsInRange.filter(ev => ev.cat !== 'tache');
+  // Vacances
+  const vacances = eventsInRange.filter(ev => ev.cat === 'vacances');
+
+  // RDV sans prestataire
+  const rdvs = eventsInRange.filter(ev => ev.cat === 'rdv' && !ev.prestataire_id);
+
+  // Événements longs
+  const longs = eventsInRange.filter(ev => ev.cat === 'long');
+
+  function miniBox(title, items, renderFn) {
+    if (items.length === 0) return '';
+    return `<div class="mini-box">
+      <div class="mini-box-title">${title}</div>
+      ${items.map(renderFn).join('')}
+    </div>`;
+  }
+
+  function resumeItem(ev) {
+    const desc = ev.content ? ev.content.replace(/\n/g,' ').substring(0,80) : '';
+    return `<div class="resume-ev" onclick="openModal('${ev.id}')" style="cursor:pointer">
+      <span class="resume-ev-date">${formatMediumDateRange(ev)}</span>
+      <span class="resume-ev-title"> · ${ev.title}</span>
+      ${desc ? `<div class="resume-ev-desc">${desc}</div>` : ''}
+    </div>`;
+  }
 
   sidebar.innerHTML = `
     <div class="resume-box">
       <div class="resume-box-title">Résumé</div>
-      <div class="resume-top-row">
-        <div class="mini-box">
-          <div class="mini-box-title">À faire</div>
-          ${taches.length === 0 ? '<div style="font-size:0.75rem;color:var(--text-muted)">Aucune tâche</div>' :
-            taches.map(t => `
-              <div class="mini-task${t.done ? ' done-task' : ''}">
-                ${t.date_start ? `<span class="mini-task-date">${formatShortDate(t.date_start)}</span>` : ''}
-                <span class="mini-task-title">${t.title}</span>
-              </div>`).join('')}
-        </div>
-        <div class="mini-box">
-          <div class="mini-box-title">Médical</div>
-          ${medicals.length === 0 ? '<div style="font-size:0.75rem;color:var(--text-muted)">Aucun RDV</div>' :
-            medicals.map(ev => `
-              <div class="mini-medical">
-                <span class="mini-medical-date">${formatShortDate(ev.date_start)}</span>
-                <span class="mini-medical-title">${ev.title}</span>
-              </div>`).join('')}
-        </div>
-      </div>
-      <div class="resume-events">
-        ${resumeEvs.length === 0 ? '<div style="font-size:0.8rem;color:var(--text-muted)">Aucun événement</div>' :
-          resumeEvs.map(ev => {
-            const dateStr = formatMediumDateRange(ev);
-            const desc = ev.content ? ev.content.replace(/\n/g,' ').substring(0,80) : '';
-            return `<div class="resume-ev" onclick="openModal('${ev.id}')" style="cursor:pointer">
-              <span class="resume-ev-date">${dateStr}</span>
-              <span class="resume-ev-title"> · ${ev.title}</span>
-              ${desc ? `<div class="resume-ev-desc">${desc}</div>` : ''}
-            </div>`;
-          }).join('')}
-      </div>
+
+      ${miniBox('À faire', taches, t => `
+        <div class="mini-task${t.done ? ' done-task' : ''}">
+          ${t.date_start ? `<span class="mini-task-date">${formatShortDate(t.date_start)}</span>` : ''}
+          <span class="mini-task-title">${t.title}</span>
+        </div>`)}
+
+      ${miniBox('Médical', medicals, ev => `
+        <div class="mini-medical">
+          <span class="mini-medical-date">${formatShortDate(ev.date_start)}</span>
+          <span class="mini-medical-title">${ev.title}</span>
+        </div>`)}
+
+      ${miniBox('Vacances', vacances, ev => `
+        <div class="mini-medical">
+          <span class="mini-medical-date" style="color:var(--vacances-color)">${formatShortDate(ev.date_start)}${ev.date_end && ev.date_end !== ev.date_start ? '→'+formatShortDate(ev.date_end) : ''}</span>
+          <span class="mini-medical-title">${ev.title}</span>
+        </div>`)}
+
+      ${rdvs.length > 0 ? `<div class="resume-events" style="margin-top:10px">${rdvs.map(resumeItem).join('')}</div>` : ''}
+
+      ${longs.length > 0 ? `<div class="resume-events" style="margin-top:10px">${longs.map(ev => {
+        const desc = ev.content ? ev.content.replace(/\n/g,' ').substring(0,80) : '';
+        return `<div class="resume-ev" onclick="openModal('${ev.id}')" style="cursor:pointer;font-style:italic;font-weight:700">
+          <span class="resume-ev-title">${ev.title}</span>
+          ${desc ? `<div class="resume-ev-desc" style="font-weight:400">${desc}</div>` : ''}
+        </div>`;
+      }).join('')}</div>` : ''}
+
     </div>
   `;
 }
