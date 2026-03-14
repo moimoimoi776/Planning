@@ -1136,7 +1136,7 @@ async function saveEvent() {
   const needEnd = selectedCat === 'long' || selectedCat === 'vacances';
   if (needEnd && !dateEnd) { showToast('Choisissez une date de fin.', true); return; }
   if (needEnd && dateEnd < dateStart) { showToast('Date de fin avant date de début.', true); return; }
-  const ev = { title, cat: selectedCat, date_start: dateStart || null, date_end: needEnd ? dateEnd : (dateStart || null), content, prestataire_id: prestId, event_time: eventTime };
+  const ev = { title, cat: selectedCat, date_start: dateStart || null, date_end: needEnd ? dateEnd : (dateStart || null), content, prestataire_id: prestId, event_time: eventTime, user_id: currentUser.id };
   if (editingId) {
     const ok = await updateEventDB(editingId, ev);
     if (!ok) return;
@@ -1269,7 +1269,7 @@ async function savePrest() {
     if (!ok) return;
     showToast('Prestataire modifié ✓');
   } else {
-    const c = await insertPrest({ nom, description: desc });
+    const c = await insertPrest({ nom, description: desc, user_id: currentUser.id });
     if (!c) return;
     showToast('Prestataire ajouté ✓');
   }
