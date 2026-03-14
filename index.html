@@ -76,20 +76,23 @@
     border-radius:8px; cursor:pointer; transition:all 0.15s;
   }
   .nav-btns button:hover { background:var(--surface2); border-color:var(--accent); color:var(--accent); }
-  .months-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  
+  /* NOUVELLE MISE EN PAGE CALENDRIER */
+  .cal-layout { display:grid; grid-template-columns:1fr 300px; gap:16px; align-items:start; }
+  .months-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
   .month-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
-  .month-title { font-family:'DM Serif Display',serif; font-size:1rem; color:var(--accent); margin-bottom:10px; }
+  .month-title { font-family:'DM Serif Display',serif; font-size:1.1rem; color:var(--accent); margin-bottom:10px; }
   .month-title span { color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:300; margin-left:4px; }
   .weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
   .weekdays span { text-align:center; font-size:0.62rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; padding:3px 0; }
-  .days-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; }
-  .day { min-height:30px; padding:2px; border-radius:5px; display:flex; flex-direction:column; align-items:center; }
+  .days-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .day { min-height:48px; padding:3px 2px; border-radius:5px; display:flex; flex-direction:column; align-items:center; }
   .day.other-month .day-num { color:var(--border); }
-  .day-num { font-size:0.72rem; color:var(--text-muted); line-height:1.8; font-weight:400; min-width:18px; text-align:center; border-radius:50%; }
+  .day-num { font-size:0.75rem; color:var(--text-muted); line-height:1.8; font-weight:400; min-width:20px; text-align:center; border-radius:50%; }
   .day.today .day-num { background:var(--accent); color:var(--bg); font-weight:600; }
   .day-events { width:100%; display:flex; flex-direction:column; gap:1px; }
   .day-event {
-    font-size:0.58rem; padding:1px 3px; border-radius:3px; line-height:1.4;
+    font-size:0.62rem; padding:1px 4px; border-radius:3px; line-height:1.5;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
     cursor:pointer; transition:opacity 0.1s;
   }
@@ -99,6 +102,33 @@
   .day-event.vacances { background:var(--vacances-bg); color:var(--vacances-color); border-left:2px solid var(--vacances-color); }
   .day-event.tache { background:var(--tache-bg); color:var(--tache-color); border-left:2px solid var(--tache-color); }
   .day-event.done-event { opacity:0.4; text-decoration:line-through; }
+
+  /* SIDEBAR RÉSUMÉ */
+  .cal-sidebar { display:flex; flex-direction:column; gap:12px; }
+  .resume-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+  .resume-box-title { font-family:'DM Serif Display',serif; font-size:1rem; color:var(--accent); margin-bottom:12px; }
+  .resume-top-row { display:flex; gap:10px; margin-bottom:14px; }
+  
+  /* Encadrés À faire + Médical */
+  .mini-box { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px; }
+  .mini-box-title { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:8px; }
+  .mini-task { font-size:0.78rem; color:var(--text); padding:3px 0; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:6px; }
+  .mini-task:last-child { border-bottom:none; }
+  .mini-task-date { font-size:0.68rem; color:var(--text-muted); flex-shrink:0; }
+  .mini-task-title { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mini-task.done-task { opacity:0.45; text-decoration:line-through; }
+  .mini-medical { font-size:0.78rem; color:var(--text); padding:3px 0; border-bottom:1px solid var(--border); display:flex; gap:6px; align-items:baseline; }
+  .mini-medical:last-child { border-bottom:none; }
+  .mini-medical-date { font-size:0.7rem; color:var(--rdv-color); flex-shrink:0; font-weight:600; }
+  .mini-medical-title { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* Résumé événements */
+  .resume-events { display:flex; flex-direction:column; gap:6px; }
+  .resume-ev { font-size:0.8rem; line-height:1.5; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .resume-ev:last-child { border-bottom:none; padding-bottom:0; }
+  .resume-ev-date { font-size:0.72rem; font-weight:600; color:var(--text-muted); }
+  .resume-ev-title { color:var(--text); }
+  .resume-ev-desc { color:var(--text-muted); font-size:0.75rem; }
 
   /* FORMULAIRE */
   .form-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; max-width:620px; }
@@ -406,14 +436,17 @@
         <h1 id="cal-title">Calendrier</h1>
       </div>
       <div class="nav-btns">
-        <button onclick="offsetMonths(-6)">← 6 mois</button>
+        <button onclick="offsetMonths(-2)">‹‹</button>
         <button onclick="offsetMonths(-1)">‹</button>
         <button onclick="goToday()">Aujourd'hui</button>
         <button onclick="offsetMonths(1)">›</button>
-        <button onclick="offsetMonths(6)">6 mois →</button>
+        <button onclick="offsetMonths(2)">››</button>
       </div>
     </div>
-    <div class="months-grid" id="months-grid"></div>
+    <div class="cal-layout">
+      <div class="months-grid" id="months-grid"></div>
+      <div class="cal-sidebar" id="cal-sidebar"></div>
+    </div>
   </div>
 
   <!-- TACHES -->
@@ -911,26 +944,95 @@ function goToday() { startOffset = 0; renderCalendar(); }
 function renderCalendar() {
   const today = new Date();
   const grid = document.getElementById('months-grid');
+  const sidebar = document.getElementById('cal-sidebar');
   grid.innerHTML = '';
 
   if (isMobile()) {
-    // Mobile: 12 months scrollable starting from current month
+    if (sidebar) sidebar.style.display = 'none';
     document.getElementById('cal-title').textContent = 'Calendrier';
     for (let i = 0; i < 12; i++) {
       const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
       grid.appendChild(renderMonth(d, today));
     }
   } else {
-    // Desktop: 6 months grid with offset
-    const s = new Date(today.getFullYear(), today.getMonth() + startOffset, 1);
-    const e = new Date(today.getFullYear(), today.getMonth() + startOffset + 5, 1);
+    if (sidebar) sidebar.style.display = '';
+    // 2 mois
+    const m1 = new Date(today.getFullYear(), today.getMonth() + startOffset, 1);
+    const m2 = new Date(today.getFullYear(), today.getMonth() + startOffset + 1, 1);
     document.getElementById('cal-title').textContent =
-      MONTHS_FR[s.getMonth()] + ' ' + s.getFullYear() + ' — ' + MONTHS_FR[e.getMonth()] + ' ' + e.getFullYear();
-    for (let i = 0; i < 6; i++) {
-      const d = new Date(today.getFullYear(), today.getMonth() + startOffset + i, 1);
-      grid.appendChild(renderMonth(d, today));
-    }
+      MONTHS_FR[m1.getMonth()] + ' ' + m1.getFullYear() + ' — ' + MONTHS_FR[m2.getMonth()] + ' ' + m2.getFullYear();
+    grid.appendChild(renderMonth(m1, today));
+    grid.appendChild(renderMonth(m2, today));
+    renderSidebar(m1, m2);
   }
+}
+
+function renderSidebar(m1, m2) {
+  const sidebar = document.getElementById('cal-sidebar');
+  if (!sidebar) return;
+
+  // Événements des 2 mois
+  const m1Start = toDateStr(m1.getFullYear(), m1.getMonth(), 1);
+  const m2End = toDateStr(m2.getFullYear(), m2.getMonth(), new Date(m2.getFullYear(), m2.getMonth()+1, 0).getDate());
+
+  const eventsInRange = events.filter(ev => {
+    const start = ev.date_start || '';
+    const end = ev.date_end || ev.date_start || '';
+    return start <= m2End && end >= m1Start;
+  }).sort((a,b) => (a.date_start||'').localeCompare(b.date_start||''));
+
+  // Tâches (toutes, pas seulement dans la période)
+  const taches = events.filter(ev => ev.cat === 'tache' && !ev.done)
+    .sort((a,b) => {
+      if (!a.date_start && !b.date_start) return a.title.localeCompare(b.title);
+      if (!a.date_start) return -1;
+      if (!b.date_start) return 1;
+      return a.date_start.localeCompare(b.date_start);
+    });
+
+  // RDV avec prestataire dans la période
+  const medicals = eventsInRange.filter(ev => ev.cat === 'rdv' && ev.prestataire_id);
+
+  // Résumé événements (hors tâches)
+  const resumeEvs = eventsInRange.filter(ev => ev.cat !== 'tache');
+
+  sidebar.innerHTML = `
+    <div class="resume-box">
+      <div class="resume-box-title">Résumé</div>
+      <div class="resume-top-row">
+        <div class="mini-box">
+          <div class="mini-box-title">À faire</div>
+          ${taches.length === 0 ? '<div style="font-size:0.75rem;color:var(--text-muted)">Aucune tâche</div>' :
+            taches.map(t => `
+              <div class="mini-task${t.done ? ' done-task' : ''}">
+                ${t.date_start ? `<span class="mini-task-date">${formatShortDate(t.date_start)}</span>` : ''}
+                <span class="mini-task-title">${t.title}</span>
+              </div>`).join('')}
+        </div>
+        <div class="mini-box">
+          <div class="mini-box-title">Médical</div>
+          ${medicals.length === 0 ? '<div style="font-size:0.75rem;color:var(--text-muted)">Aucun RDV</div>' :
+            medicals.map(ev => `
+              <div class="mini-medical">
+                <span class="mini-medical-date">${formatShortDate(ev.date_start)}</span>
+                <span class="mini-medical-title">${ev.title}</span>
+              </div>`).join('')}
+        </div>
+      </div>
+      <div class="resume-events">
+        ${resumeEvs.length === 0 ? '<div style="font-size:0.8rem;color:var(--text-muted)">Aucun événement</div>' :
+          resumeEvs.map(ev => {
+            const dateStr = formatMediumDateRange(ev);
+            const desc = ev.content ? ev.content.replace(/\n/g,' ').substring(0,80) : '';
+            return `<div class="resume-ev" onclick="openModal('${ev.id}')" style="cursor:pointer">
+              <span class="resume-ev-date">${dateStr}</span>
+              <span class="resume-ev-title"> · ${ev.title}</span>
+              ${desc ? `<div class="resume-ev-desc">${desc}</div>` : ''}
+            </div>`;
+          }).join('')}
+      </div>
+    </div>
+  `;
 }
 function renderMonth(date, today) {
   const year = date.getFullYear(), month = date.getMonth();
@@ -1287,6 +1389,21 @@ async function deletePrest(id) {
 
 // ── HELPERS ──
 function catLabel(cat) { return { rdv:'Rendez-vous', long:'Évt. long', vacances:'Vacances', tache:'Tâche' }[cat] || cat; }
+function formatShortDate(str) {
+  if (!str) return '';
+  const [,m,d] = str.split('-');
+  return d + '/' + m;
+}
+function formatMediumDateRange(ev) {
+  const d1 = formatMediumDate(ev.date_start);
+  if (ev.cat === 'rdv' || ev.cat === 'tache' || !ev.date_end || ev.date_start === ev.date_end) return d1;
+  return d1 + ' → ' + formatMediumDate(ev.date_end);
+}
+function formatMediumDate(str) {
+  if (!str) return '';
+  const [,m,d] = str.split('-');
+  return parseInt(d) + ' ' + MONTHS_FR[parseInt(m)-1];
+}
 function formatDateRange(ev) {
   const d1 = formatDate(ev.date_start);
   if (ev.cat === 'rdv' || ev.cat === 'tache' || ev.date_start === ev.date_end) return d1;
