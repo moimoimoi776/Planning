@@ -132,7 +132,7 @@
   .resume-ev-sep { color:var(--text-muted); flex-shrink:0; margin:0 4px; }
   .resume-ev-desc-wrap { flex:1; overflow:hidden; position:relative; }
   .resume-ev-desc { color:var(--text-muted); font-size:0.75rem; font-weight:400; white-space:nowrap; display:inline-block; }
-  .resume-ev:hover .resume-ev-desc { animation: scroll-text 6s linear forwards; }
+  .resume-ev:hover .resume-ev-desc.scrollable { animation: scroll-text 6s linear forwards; }
   @keyframes scroll-text {
     0% { transform: translateX(0); }
     10% { transform: translateX(0); }
@@ -1028,23 +1028,32 @@ function renderSidebar(m1, m2) {
     <div class="resume-box">
       <div class="resume-box-title">Résumé</div>
 
-      ${miniBox('À faire', taches, t => `
-        <div class="mini-task${t.done ? ' done-task' : ''}">
+      ${miniBox('À faire', taches, t => {
+        const desc = t.content ? t.content.replace(/\n/g,' ') : '';
+        return `<div class="mini-task${t.done ? ' done-task' : ''}">
           ${t.date_start ? `<span class="mini-task-date">${formatShortDate(t.date_start)}</span>` : ''}
           <span class="mini-task-title">${t.title}</span>
-        </div>`)}
+          ${desc ? `<span class="resume-ev-sep" style="color:var(--text-muted);margin:0 4px">-</span><span class="resume-ev-desc-wrap" style="flex:1;overflow:hidden"><span class="resume-ev-desc">${desc}</span></span>` : ''}
+        </div>`;
+      })}
 
-      ${miniBox('Médical', medicals, ev => `
-        <div class="mini-medical">
+      ${miniBox('Médical', medicals, ev => {
+        const desc = ev.content ? ev.content.replace(/\n/g,' ') : '';
+        return `<div class="mini-medical">
           <span class="mini-medical-date">${formatShortDate(ev.date_start)}</span>
           <span class="mini-medical-title">${ev.title}</span>
-        </div>`)}
+          ${desc ? `<span class="resume-ev-sep" style="color:var(--text-muted);margin:0 4px">-</span><span class="resume-ev-desc-wrap" style="flex:1;overflow:hidden"><span class="resume-ev-desc">${desc}</span></span>` : ''}
+        </div>`;
+      })}
 
-      ${miniBox('Vacances', vacances, ev => `
-        <div class="mini-medical">
+      ${miniBox('Vacances', vacances, ev => {
+        const desc = ev.content ? ev.content.replace(/\n/g,' ') : '';
+        return `<div class="mini-medical">
           <span class="mini-medical-date" style="color:var(--vacances-color)">${formatShortDate(ev.date_start)}${ev.date_end && ev.date_end !== ev.date_start ? '→'+formatShortDate(ev.date_end) : ''}</span>
           <span class="mini-medical-title">${ev.title}</span>
-        </div>`)}
+          ${desc ? `<span class="resume-ev-sep" style="color:var(--text-muted);margin:0 4px">-</span><span class="resume-ev-desc-wrap" style="flex:1;overflow:hidden"><span class="resume-ev-desc">${desc}</span></span>` : ''}
+        </div>`;
+      })}
 
       ${rdvs.length > 0 ? `<div class="resume-events" style="margin-top:10px">${rdvs.map(resumeItem).join('')}</div>` : ''}
 
@@ -1060,6 +1069,20 @@ function renderSidebar(m1, m2) {
 
     </div>
   `;
+
+  // Défilement description au survol (seulement si > 50 caractères)
+  requestAnimationFrame(() => {
+    sidebar.querySelectorAll('.resume-ev-desc').forEach(el => {
+      const wrap = el.parentElement;
+      if (!wrap) return;
+      if ((el.textContent || '').length <= 50) return;
+      const overflow = el.scrollWidth - wrap.clientWidth;
+      if (overflow > 0) {
+        el.style.setProperty('--scroll-dist', '-' + overflow + 'px');
+        el.classList.add('scrollable');
+      }
+    });
+  });
 }
 function renderMonth(date, today) {
   const year = date.getFullYear(), month = date.getMonth();
@@ -1205,11 +1228,14 @@ function renderList() {
   // Calcul de la distance de défilement pour chaque description
   requestAnimationFrame(() => {
     sidebar.querySelectorAll('.resume-ev-desc').forEach(el => {
+      const text = el.textContent || '';
+      if (text.length <= 50) return;
       const wrap = el.parentElement;
       if (!wrap) return;
       const overflow = el.scrollWidth - wrap.clientWidth;
       if (overflow > 0) {
         el.style.setProperty('--scroll-dist', '-' + overflow + 'px');
+        el.classList.add('scrollable');
       }
     });
   });
